@@ -5,14 +5,14 @@ import 'package:crypto/crypto.dart';
 import 'ekta_depan_page.dart';
 import 'ekta_belakang_page.dart';
 
-class ProfilPage extends StatefulWidget {
-  const ProfilPage({Key? key}) : super(key: key);
+class EditProfilPage extends StatefulWidget {
+  const EditProfilPage({Key? key}) : super(key: key);
 
   @override
-  State<ProfilPage> createState() => _ProfilPageState();
+  State<EditProfilPage> createState() => _EditProfilPageState();
 }
 
-class _ProfilPageState extends State<ProfilPage> {
+class _EditProfilPageState extends State<EditProfilPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nikController = TextEditingController();
   final TextEditingController _tempatLahirController = TextEditingController();

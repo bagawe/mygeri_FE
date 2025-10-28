@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'beranda_page.dart';
-import 'riwayat_page.dart';
-import 'profil_page.dart';
-import 'pesan_page.dart';
-import 'pengaturan_page.dart';
+import '../pages/beranda/beranda_page.dart';
+import '../pages/riwayat/riwayat_page.dart';
+import '../pages/profil/profile_page.dart';
+import '../pages/pesan/pesan_page.dart';
+import '../pages/pengaturan/pengaturan_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
   static const List<Widget> _pages = <Widget>[
     BerandaPage(),
     RiwayatPage(),
-    ProfilPage(),
+    ProfilePage(),
     PesanPage(),
     PengaturanPage(),
   ];

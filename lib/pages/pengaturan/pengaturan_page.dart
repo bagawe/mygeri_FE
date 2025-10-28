@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ganti_password_page.dart';
 
 class PengaturanPage extends StatelessWidget {
   const PengaturanPage({super.key});
@@ -15,7 +16,11 @@ class PengaturanPage extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.lock, color: Colors.red),
             title: const Text('Ubah Password'),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GantiPasswordPage()),
+              );
+            },
           ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications, color: Colors.red),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'chat_page.dart';
 
 class PesanPage extends StatelessWidget {
   const PesanPage({super.key});
@@ -36,14 +37,28 @@ class PesanPage extends StatelessWidget {
                 ),
               ],
             ),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatPage(nama: 'Kader A'),
+                ),
+              );
+            },
           ),
           ListTile(
             leading: const CircleAvatar(child: Icon(Icons.person)),
             title: const Text('Kader B'),
             subtitle: const Text('Terima kasih atas informasinya.'),
             trailing: const Text('08:15', style: TextStyle(fontSize: 12)),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatPage(nama: 'Kader B'),
+                ),
+              );
+            },
           ),
         ],
       ),

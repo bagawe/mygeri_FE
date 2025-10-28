@@ -11,13 +11,35 @@ class SplashScreen extends StatelessWidget {
     });
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Image.asset(
-          'assets/images/my geri trans.png',
-          width: size.width * 0.4,
-          height: size.width * 0.4,
-          fit: BoxFit.contain,
-        ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Center(
+              child: Image.asset(
+                'assets/images/my geri trans.png',
+                width: size.width * 0.4,
+                height: size.width * 0.4,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 48.0),
+            child: Column(
+              children: [
+                const Text('Supported by :', style: TextStyle(fontSize: 16)),
+                const SizedBox(height: 8),
+                Image.asset(
+                  'assets/images/Lambang_Partai_Gerakan_Indonesia_Raya.svg.png',
+                  width: 64,
+                  height: 64,
+                  fit: BoxFit.contain,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

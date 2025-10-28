@@ -23,6 +23,14 @@ class EKtaDepanPage extends StatelessWidget {
         title: const Text('KTA Digital', style: TextStyle(color: Colors.black)),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print, color: Colors.blue),
+            onPressed: () {
+              // TODO: Implement print functionality
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Padding(
