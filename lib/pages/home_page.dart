@@ -14,14 +14,29 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  final List<Widget?> _pages = List.filled(5, null);
 
-  static const List<Widget> _pages = <Widget>[
-    BerandaPage(),
-    RiwayatPage(),
-    ProfilePage(),
-    PesanPage(),
-    PengaturanPage(),
-  ];
+  Widget _getPage(int index) {
+    if (_pages[index] != null) return _pages[index]!;
+    switch (index) {
+      case 0:
+        _pages[0] = const BerandaPage();
+        break;
+      case 1:
+        _pages[1] = const RiwayatPage();
+        break;
+      case 2:
+        _pages[2] = const ProfilePage();
+        break;
+      case 3:
+        _pages[3] = const PesanPage();
+        break;
+      case 4:
+        _pages[4] = const PengaturanPage();
+        break;
+    }
+    return _pages[index]!;
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -32,7 +47,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: List.generate(_pages.length, (i) => _getPage(i)),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.red,

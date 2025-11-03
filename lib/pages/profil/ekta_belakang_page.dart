@@ -15,7 +15,7 @@ class EKtaBelakangPage extends StatelessWidget {
   final String qrSekretaris;
 
   const EKtaBelakangPage({
-    Key? key,
+    super.key,
     required this.nama,
     required this.nomorKta,
     required this.ttl,
@@ -27,7 +27,7 @@ class EKtaBelakangPage extends StatelessWidget {
     required this.kelamin,
     required this.qrKetum,
     required this.qrSekretaris,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

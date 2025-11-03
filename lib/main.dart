@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         checkboxTheme: CheckboxThemeData(
-          fillColor: MaterialStatePropertyAll(Colors.red),
+          fillColor: WidgetStatePropertyAll(Colors.red),
         ),
         inputDecorationTheme: InputDecorationTheme(
           focusedBorder: OutlineInputBorder(

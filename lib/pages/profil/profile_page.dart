@@ -5,7 +5,6 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dummy data, replace with provider/model if available
     final user = {
       'nama': 'Sinta Silalahi',
       'username': '@sintasilalahi',
@@ -30,6 +29,7 @@ class ProfilePage extends StatelessWidget {
       'assets/images/kegiatan5.jpg',
       'assets/images/kegiatan6.jpg',
     ];
+    String getData(String? val) => (val == null || val.isEmpty) ? '-' : val;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -46,7 +46,19 @@ class ProfilePage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Image.asset('assets/images/mygeri_logo.png', height: 40),
+                  Image.asset(
+                    'assets/images/my geri trans.png',
+                    height: 40,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.image, color: Colors.white),
+                    ),
+                  ),
                   const Spacer(),
                 ],
               ),
@@ -54,13 +66,26 @@ class ProfilePage extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundImage: AssetImage('assets/images/profile_sinta.jpeg'),
+                    ClipOval(
+                      child: Image.asset(
+                        'assets/images/sinta.png',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.person, size: 60, color: Colors.white),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Selamat Datang ${user['nama']} !',
+                      'Selamat Datang ${getData(user['nama'])} !',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                   ],
@@ -74,53 +99,34 @@ class ProfilePage extends StatelessWidget {
                 },
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
-                  TableRow(children: [const Text('Username'), Text(': ${user['username']}')]),
-                  TableRow(children: [const Text('Email'), Text(': ${user['email']}')]),
-                  TableRow(children: [const Text('Nomor KTA'), Text(': ${user['nomorKta']}')]),
-                  TableRow(children: [const Text('TTL'), Text(': ${user['ttl']}')]),
-                  TableRow(children: [const Text('Alamat'), Text(': ${user['alamat']}')]),
-                  TableRow(children: [const Text('Kelurahan'), Text(': ${user['kelurahan']}')]),
-                  TableRow(children: [const Text('Kecamatan'), Text(': ${user['kecamatan']}')]),
-                  TableRow(children: [const Text('Kota/Kab'), Text(': ${user['kota']}')]),
-                  TableRow(children: [const Text('Propinsi'), Text(': ${user['provinsi']}')]),
-                  TableRow(children: [const Text('Kelamin'), Text(': ${user['kelamin']}')]),
-                  TableRow(children: [const Text('Status Partai'), Text(': ${user['statusPartai']}')]),
-                  TableRow(children: [const Text('Jabatan'), Text(': ${user['jabatan']}')]),
-                  TableRow(children: [const Text('Underbow'), Text(': ${user['underbow']}')]),
+                  TableRow(children: [const Text('Username'), Text(': ${getData(user['username'])}')]),
+                  TableRow(children: [const Text('Email'), Text(': ${getData(user['email'])}')]),
+                  TableRow(children: [const Text('Nomor KTA'), Text(': ${getData(user['nomorKta'])}')]),
+                  TableRow(children: [const Text('TTL'), Text(': ${getData(user['ttl'])}')]),
+                  TableRow(children: [const Text('Alamat'), Text(': ${getData(user['alamat'])}')]),
+                  TableRow(children: [const Text('Kelurahan'), Text(': ${getData(user['kelurahan'])}')]),
+                  TableRow(children: [const Text('Kecamatan'), Text(': ${getData(user['kecamatan'])}')]),
+                  TableRow(children: [const Text('Kota/Kab'), Text(': ${getData(user['kota'])}')]),
+                  TableRow(children: [const Text('Propinsi'), Text(': ${getData(user['provinsi'])}')]),
+                  TableRow(children: [const Text('Kelamin'), Text(': ${getData(user['kelamin'])}')]),
+                  TableRow(children: [const Text('Status Partai'), Text(': ${getData(user['statusPartai'])}')]),
+                  TableRow(children: [const Text('Jabatan'), Text(': ${getData(user['jabatan'])}')]),
+                  TableRow(children: [const Text('Underbow'), Text(': ${getData(user['underbow'])}')]),
                 ],
               ),
               const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: 44,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/edit-profil');
-                      },
-                      child: const Text('Update Profile'),
-                    ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    height: 44,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/ekta');
-                      },
-                      child: const Text('Lihat EKTA', style: TextStyle(color: Colors.black)),
-                    ),
-                  ),
-                ],
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/edit-profil');
+                  },
+                  child: const Text('Update Profile'),
+                ),
               ),
               const SizedBox(height: 24),
               const Align(
@@ -128,37 +134,33 @@ class ProfilePage extends StatelessWidget {
                 child: Text('Kegiatan :', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 8),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 1,
-                ),
-                itemCount: kegiatan.length,
-                itemBuilder: (context, i) {
-                  return Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(kegiatan[i], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-                      ),
-                      Positioned(
-                        right: 4,
-                        bottom: 4,
-                        child: IconButton(
-                          icon: const Icon(Icons.comment, color: Colors.white, size: 22),
-                          onPressed: () {
-                            // Placeholder: open comment dialog
-                          },
+              if (kegiatan.isNotEmpty)
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: kegiatan.length,
+                  itemBuilder: (context, i) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        kegiatan[i],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
                         ),
                       ),
-                    ],
-                  );
-                },
-              ),
+                    );
+                  },
+                )
+              else
+                const Text('-', style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,

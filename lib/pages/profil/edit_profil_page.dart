@@ -6,7 +6,7 @@ import 'ekta_depan_page.dart';
 import 'ekta_belakang_page.dart';
 
 class EditProfilPage extends StatefulWidget {
-  const EditProfilPage({Key? key}) : super(key: key);
+  const EditProfilPage({super.key});
 
   @override
   State<EditProfilPage> createState() => _EditProfilPageState();
@@ -130,6 +130,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                       ),
                       const SizedBox(height: 20),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             flex: 2,
@@ -161,7 +162,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                                     DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
                                   ],
                                   onChanged: (val) => setState(() => _selectedGender = val),
-                                  decoration: const InputDecoration(hintText: 'Laki/Perempuan'),
+                                  decoration: const InputDecoration(hintText: ''),
                                 ),
                               ],
                             ),
@@ -172,15 +173,17 @@ class _EditProfilPageState extends State<EditProfilPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Kawin/Belum :'),
+                                const Text('Status :'),
                                 DropdownButtonFormField<String>(
                                   value: _selectedStatus,
                                   items: const [
                                     DropdownMenuItem(value: 'Kawin', child: Text('Kawin')),
-                                    DropdownMenuItem(value: 'Belum', child: Text('Belum')),
+                                    DropdownMenuItem(value: 'Belum Kawin', child: Text('Belum Kawin')),
+                                    DropdownMenuItem(value: 'Janda', child: Text('Janda')),
+                                    DropdownMenuItem(value: 'Duda', child: Text('Duda')),
                                   ],
                                   onChanged: (val) => setState(() => _selectedStatus = val),
-                                  decoration: const InputDecoration(hintText: 'Kawin/Belum'),
+                                  decoration: const InputDecoration(hintText: 'Status'),
                                 ),
                               ],
                             ),
@@ -230,7 +233,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedProvinsi,
+                              initialValue: _selectedProvinsi,
                               items: const [DropdownMenuItem(value: 'Jawa Barat', child: Text('Jawa Barat'))],
                               onChanged: (val) => setState(() => _selectedProvinsi = val),
                               decoration: const InputDecoration(hintText: 'Provinsi'),
@@ -239,7 +242,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedKota,
+                              initialValue: _selectedKota,
                               items: const [DropdownMenuItem(value: 'Bandung', child: Text('Bandung'))],
                               onChanged: (val) => setState(() => _selectedKota = val),
                               decoration: const InputDecoration(hintText: 'Kota/Kabupaten'),
@@ -248,7 +251,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedKecamatan,
+                              initialValue: _selectedKecamatan,
                               items: const [DropdownMenuItem(value: 'Cicendo', child: Text('Cicendo'))],
                               onChanged: (val) => setState(() => _selectedKecamatan = val),
                               decoration: const InputDecoration(hintText: 'Kecamatan'),
@@ -261,7 +264,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedKelurahan,
+                              initialValue: _selectedKelurahan,
                               items: const [DropdownMenuItem(value: 'Sukajadi', child: Text('Sukajadi'))],
                               onChanged: (val) => setState(() => _selectedKelurahan = val),
                               decoration: const InputDecoration(hintText: 'Kelurahan/Desa'),
@@ -308,7 +311,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                               children: [
                                 const Text('Pendidikan :'),
                                 DropdownButtonFormField<String>(
-                                  value: _selectedPendidikan,
+                                  initialValue: _selectedPendidikan,
                                   items: const [DropdownMenuItem(value: 'S1', child: Text('S1'))],
                                   onChanged: (val) => setState(() => _selectedPendidikan = val),
                                   decoration: const InputDecoration(hintText: 'Pendidikan'),

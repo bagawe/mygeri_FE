@@ -3,10 +3,10 @@ import 'pages/splash_screen.dart';
 import 'pages/onboarding_page.dart';
 import 'pages/login_page.dart';
 import 'pages/home_page.dart';
-import 'pages/profile_page.dart';
-import 'pages/edit_profil_page.dart';
-import 'pages/ekta_depan_page.dart';
-import 'pages/ekta_belakang_page.dart';
+import 'pages/profil/profile_page.dart';
+import 'pages/profil/edit_profil_page.dart';
+import 'pages/profil/ekta_depan_page.dart';
+import 'pages/profil/ekta_belakang_page.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -27,7 +27,7 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const EKtaDepanPage(
           nama: 'Sinta Silalahi',
           qrData: 'dummy',
-          fotoPath: 'assets/images/profile_sinta.jpeg',
+          fotoPath: 'assets/images/logo myGeri Jpeg.jpg',
         ));
       case '/ekta-belakang':
         return MaterialPageRoute(builder: (_) => const EKtaBelakangPage(

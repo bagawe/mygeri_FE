@@ -31,7 +31,7 @@ class SplashScreen extends StatelessWidget {
                 const Text('Supported by :', style: TextStyle(fontSize: 16)),
                 const SizedBox(height: 8),
                 Image.asset(
-                  'assets/images/Lambang_Partai_Gerakan_Indonesia_Raya.svg.png',
+                  'assets/images/gerinda.png',
                   width: 64,
                   height: 64,
                   fit: BoxFit.contain,

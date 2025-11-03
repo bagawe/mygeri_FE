@@ -7,11 +7,11 @@ class EKtaDepanPage extends StatelessWidget {
   final String fotoPath;
 
   const EKtaDepanPage({
-    Key? key,
+    super.key,
     required this.nama,
     required this.qrData,
     required this.fotoPath,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
