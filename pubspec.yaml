@@ -37,6 +37,20 @@ dependencies:
   intl: ^0.20.2
   qr_flutter: ^4.1.0
   crypto: ^3.0.6
+  flutter_launcher_icons: ^0.14.4
+  
+  # HTTP & API
+  http: ^1.1.0
+  http_parser: ^4.0.2
+  
+  # Secure Storage
+  flutter_secure_storage: ^9.0.0
+  
+  # Image Picker
+  image_picker: ^1.0.7
+  shared_preferences: ^2.5.4
+  timeago: ^3.7.1
+  carousel_slider: ^5.1.1
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +67,11 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/my_geri_trans.png"
+
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -94,3 +113,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+

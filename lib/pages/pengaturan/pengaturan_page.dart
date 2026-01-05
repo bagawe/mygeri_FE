@@ -1,8 +1,36 @@
 import 'package:flutter/material.dart';
+import '../../services/session_manager.dart';
 import 'ganti_password_page.dart';
+import 'blocked_users_page.dart';
 
-class PengaturanPage extends StatelessWidget {
+class PengaturanPage extends StatefulWidget {
   const PengaturanPage({super.key});
+
+  @override
+  State<PengaturanPage> createState() => _PengaturanPageState();
+}
+
+class _PengaturanPageState extends State<PengaturanPage> {
+  final SessionManager _sessionManager = SessionManager();
+  bool _isLoggingOut = false;
+
+  Future<void> _handleLogout() async {
+    if (_isLoggingOut) return; // Prevent double-tap
+    
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      await _sessionManager.performLogout();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoggingOut = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +50,17 @@ class PengaturanPage extends StatelessWidget {
               );
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.block, color: Colors.red),
+            title: const Text('Akun yang Diblokir'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BlockedUsersPage()),
+              );
+            },
+          ),
+          const Divider(),
           SwitchListTile(
             secondary: const Icon(Icons.notifications, color: Colors.red),
             title: const Text('Notifikasi'),
@@ -52,31 +91,53 @@ class PengaturanPage extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout'),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Konfirmasi Logout'),
-                  content: const Text('Yakin ingin keluar dari aplikasi?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: const Text('Batal'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        // TODO: proses logout
-                      },
-                      child: const Text('Logout'),
-                    ),
-                  ],
-                ),
-              );
-            },
+            leading: Icon(
+              Icons.logout,
+              color: _isLoggingOut ? Colors.grey : Colors.red,
+            ),
+            title: Text(
+              'Logout',
+              style: TextStyle(
+                color: _isLoggingOut ? Colors.grey : Colors.black,
+              ),
+            ),
+            enabled: !_isLoggingOut,
+            onTap: _isLoggingOut
+                ? null
+                : () {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Konfirmasi Logout'),
+                        content: const Text('Yakin ingin keluar dari aplikasi?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: const Text('Batal'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () {
+                              Navigator.of(ctx).pop();
+                              _handleLogout();
+                            },
+                            child: const Text('Logout'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
           ),
+          if (_isLoggingOut)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
         ],
       ),
     );

@@ -1,4 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../services/auth_service.dart';
+import '../../models/register_request.dart';
 
 class RegisterKaderBaruPage extends StatefulWidget {
   const RegisterKaderBaruPage({super.key});
@@ -8,8 +12,13 @@ class RegisterKaderBaruPage extends StatefulWidget {
 }
 
 class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
+  final _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
+  final ImagePicker _picker = ImagePicker();
+  
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _nikController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _statusController = TextEditingController();
@@ -26,24 +35,169 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
   final TextEditingController _pendidikanController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _ulangiPasswordController = TextEditingController();
+  
+  File? _fotoKTP;
+  File? _fotoSelfie;
   bool _isChecked1 = false;
   bool _isChecked2 = false;
+  bool _isLoading = false;
 
-  Widget _imageBox(String label) {
-    return Container(
-      width: 150,
-      height: 120,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.camera_alt_outlined, size: 40, color: Colors.grey[400]),
-          const SizedBox(height: 8),
-          Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 16)),
-        ],
+  @override
+  void dispose() {
+    _namaController.dispose();
+    _emailController.dispose();
+    _usernameController.dispose();
+    _nikController.dispose();
+    _genderController.dispose();
+    _statusController.dispose();
+    _tempatLahirController.dispose();
+    _tanggalLahirController.dispose();
+    _provinsiController.dispose();
+    _kotaController.dispose();
+    _kecamatanController.dispose();
+    _kelurahanController.dispose();
+    _rtController.dispose();
+    _rwController.dispose();
+    _alamatJalanController.dispose();
+    _pekerjaanController.dispose();
+    _pendidikanController.dispose();
+    _passwordController.dispose();
+    _ulangiPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage(bool isKTP) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        setState(() {
+          if (isKTP) {
+            _fotoKTP = File(image.path);
+          } else {
+            _fotoSelfie = File(image.path);
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memilih gambar: $e')),
+      );
+    }
+  }
+
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_isChecked1 || !_isChecked2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap centang semua pernyataan')),
+      );
+      return;
+    }
+
+    if (_fotoKTP == null || _fotoSelfie == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap upload foto KTP dan selfie')),
+      );
+      return;
+    }
+
+    if (_passwordController.text != _ulangiPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password tidak cocok')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final request = RegisterRequest(
+        name: _namaController.text.trim(),
+        email: _emailController.text.trim(),
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+        nik: _nikController.text.trim(),
+        jenisKelamin: _genderController.text.trim(),
+        statusKawin: _statusController.text.trim(),
+        tempatLahir: _tempatLahirController.text.trim(),
+        tanggalLahir: _tanggalLahirController.text.trim(),
+        provinsi: _provinsiController.text.trim(),
+        kota: _kotaController.text.trim(),
+        kecamatan: _kecamatanController.text.trim(),
+        kelurahan: _kelurahanController.text.trim(),
+        rt: _rtController.text.trim(),
+        rw: _rwController.text.trim(),
+        jalan: _alamatJalanController.text.trim(),
+        pekerjaan: _pekerjaanController.text.trim(),
+        pendidikan: _pendidikanController.text.trim(),
+        fotoKtp: _fotoKTP!.path, // TODO: Upload ke server
+        fotoProfil: _fotoSelfie!.path, // TODO: Upload ke server
+      );
+
+      await _authService.register(request);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pendaftaran berhasil! Menunggu verifikasi admin.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Pendaftaran gagal: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Widget _imageBox(String label, File? image, bool isKTP) {
+    return GestureDetector(
+      onTap: () => _pickImage(isKTP),
+      child: Container(
+        width: 150,
+        height: 120,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black, width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: image == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.camera_alt_outlined, size: 40, color: Colors.grey[400]),
+                  const SizedBox(height: 8),
+                  Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+                ],
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(image, fit: BoxFit.cover),
+              ),
       ),
     );
   }
@@ -56,9 +210,11 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.08, vertical: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
                 const SizedBox(height: 12),
                 const Text(
                   'Pendaftaran Kader Baru',
@@ -292,7 +448,7 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                         children: [
                           const Text('Upload KTP :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          _imageBox('Foto KTP'),
+                          _imageBox('Foto KTP', _fotoKTP, true),
                         ],
                       ),
                     ),
@@ -303,7 +459,7 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                         children: [
                           const Text('Foto Selfie :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          _imageBox('Foto Selfie'),
+                          _imageBox('Foto Selfie', _fotoSelfie, false),
                         ],
                       ),
                     ),
@@ -391,10 +547,14 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                       backgroundColor: Colors.red,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: () {
-                      // TODO: proses daftar
-                    },
-                    child: const Text('Daftar', style: TextStyle(fontSize: 18)),
+                    onPressed: (_isLoading || !_isChecked1 || !_isChecked2) ? null : _handleRegister,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text('Daftar', style: TextStyle(fontSize: 18)),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -404,7 +564,8 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 16),
-              ],
+                ],
+              ),
             ),
           ),
         ),

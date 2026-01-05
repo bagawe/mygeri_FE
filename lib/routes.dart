@@ -7,6 +7,7 @@ import 'pages/profil/profile_page.dart';
 import 'pages/profil/edit_profil_page.dart';
 import 'pages/profil/ekta_depan_page.dart';
 import 'pages/profil/ekta_belakang_page.dart';
+import 'pages/feed/search_posts_page.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -43,6 +44,8 @@ class AppRoutes {
           qrKetum: 'dummy',
           qrSekretaris: 'dummy',
         ));
+      case '/search_posts':
+        return MaterialPageRoute(builder: (_) => const SearchPostsPage());
       default:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
     }
