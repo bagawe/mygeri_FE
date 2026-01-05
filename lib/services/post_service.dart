@@ -440,4 +440,14 @@ class PostService {
       );
     }
   }
+
+  // Helper method untuk mendapatkan post by ID (untuk navigasi dari notifikasi)
+  Future<PostModel> getPostById(int postId) async {
+    final response = await getPostDetail(postId);
+    if (response.success && response.data != null) {
+      return response.data!;
+    } else {
+      throw Exception(response.message ?? 'Post tidak ditemukan');
+    }
+  }
 }

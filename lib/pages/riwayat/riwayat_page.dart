@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/user_history.dart';
 import '../../services/history_service.dart';
+import '../feed/post_detail_page.dart';
+import '../../services/post_service.dart';
+import '../../services/api_service.dart';
 
 class RiwayatPage extends StatefulWidget {
   const RiwayatPage({super.key});
@@ -34,6 +37,9 @@ class _RiwayatPageState extends State<RiwayatPage> {
         return Icons.post_add;
       case 'search_post':
         return Icons.search;
+      case 'mention':
+      case 'tag':
+        return Icons.alternate_email; // Icon @ untuk mention/tag
       default:
         return Icons.history;
     }
@@ -55,6 +61,9 @@ class _RiwayatPageState extends State<RiwayatPage> {
         return Colors.indigo;
       case 'search_post':
         return Colors.cyan;
+      case 'mention':
+      case 'tag':
+        return Colors.deepOrange; // Warna untuk mention/tag
       default:
         return Colors.grey;
     }
@@ -76,8 +85,50 @@ class _RiwayatPageState extends State<RiwayatPage> {
         return 'Buat postingan';
       case 'search_post':
         return 'Pencarian postingan';
+      case 'mention':
+      case 'tag':
+        return 'Anda di-tag dalam postingan';
       default:
         return type;
+    }
+  }
+
+  // Navigasi ke detail postingan
+  void _navigateToPost(BuildContext context, int postId) async {
+    // Tampilkan loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Fetch post detail by ID
+      final postService = PostService(ApiService());
+      final post = await postService.getPostById(postId);
+      
+      // Tutup loading
+      if (context.mounted) Navigator.pop(context);
+      
+      // Navigate ke detail page
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostDetailPage(post: post),
+          ),
+        );
+      }
+    } catch (e) {
+      // Tutup loading
+      if (context.mounted) Navigator.pop(context);
+      
+      // Tampilkan error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat postingan: $e')),
+        );
+      }
     }
   }
 
@@ -129,6 +180,14 @@ class _RiwayatPageState extends State<RiwayatPage> {
                           ),
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            // Tambahkan onTap hanya untuk riwayat yang clickable
+                            onTap: h.isClickable 
+                              ? () => _navigateToPost(context, h.postId!)
+                              : null,
+                            // Tambahkan trailing icon untuk item yang bisa diklik
+                            trailing: h.isClickable 
+                              ? const Icon(Icons.chevron_right, color: Colors.grey)
+                              : null,
                             leading: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -150,6 +209,19 @@ class _RiwayatPageState extends State<RiwayatPage> {
                                 if (h.metadata != null)
                                   Text('Device: ${h.metadata?['device'] ?? '-'} | IP: ${h.metadata?['ip'] ?? '-'}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                 Text(_formatDate(h.createdAt), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                // Tambahkan hint untuk item yang bisa diklik
+                                if (h.isClickable)
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      'Ketuk untuk melihat postingan',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.blue,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
