@@ -74,6 +74,45 @@ class _BerandaPageState extends State<BerandaPage> {
     }
   }
 
+  void _showComingSoonDialog(String featureName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.construction, color: Colors.orange[700], size: 28),
+            const SizedBox(width: 12),
+            const Text('Coming Soon'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Fitur $featureName sedang dalam pengembangan.',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Kami akan segera meluncurkan fitur ini untuk Anda!',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK', style: TextStyle(fontSize: 16)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Menu icon data
@@ -139,35 +178,38 @@ class _BerandaPageState extends State<BerandaPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: menuItems.map((item) {
-                  return Column(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.12),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                  return GestureDetector(
+                    onTap: () => _showComingSoonDialog(item['label']),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.12),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: item['isAsset'] == true
+                              ? Image.asset(
+                                  item['icon'],
+                                  width: 36,
+                                  height: 36,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) => Icon(Icons.image, color: Colors.grey[600]),
+                                )
+                              : Icon(item['icon'], size: 36, color: Colors.grey[700]),
                         ),
-                        child: item['isAsset'] == true
-                            ? Image.asset(
-                                item['icon'],
-                                width: 36,
-                                height: 36,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) => Icon(Icons.image, color: Colors.grey[600]),
-                              )
-                            : Icon(item['icon'], size: 36, color: Colors.grey[700]),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(item['label'], style: const TextStyle(fontSize: 13)),
-                    ],
+                        const SizedBox(height: 6),
+                        Text(item['label'], style: const TextStyle(fontSize: 13)),
+                      ],
+                    ),
                   );
                 }).toList(),
               ),
