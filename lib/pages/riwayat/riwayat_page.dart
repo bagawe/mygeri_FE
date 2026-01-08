@@ -18,7 +18,24 @@ class _RiwayatPageState extends State<RiwayatPage> {
   @override
   void initState() {
     super.initState();
-    _futureHistory = HistoryService().getHistory();
+    _futureHistory = _loadHistory();
+  }
+
+  Future<List<UserHistory>> _loadHistory() async {
+    try {
+      final history = await HistoryService().getHistory();
+      print('📜 RiwayatPage: Loaded ${history.length} history items');
+      
+      // Debug: Print each history item
+      for (var h in history) {
+        print('  - Type: ${h.type}, postId: ${h.postId}, isClickable: ${h.isClickable}');
+      }
+      
+      return history;
+    } catch (e) {
+      print('❌ RiwayatPage: Error loading history - $e');
+      rethrow;
+    }
   }
 
   IconData _iconForType(String type) {
@@ -95,6 +112,8 @@ class _RiwayatPageState extends State<RiwayatPage> {
 
   // Navigasi ke detail postingan
   void _navigateToPost(BuildContext context, int postId) async {
+    print('🔍 Navigating to post ID: $postId');
+    
     // Tampilkan loading
     showDialog(
       context: context,
@@ -104,14 +123,24 @@ class _RiwayatPageState extends State<RiwayatPage> {
 
     try {
       // Fetch post detail by ID
+      print('📡 Fetching post detail for ID: $postId');
       final postService = PostService(ApiService());
       final post = await postService.getPostById(postId);
+      
+      // Safe substring untuk log
+      final contentPreview = post.content != null && post.content!.isNotEmpty
+          ? (post.content!.length > 30 
+              ? '${post.content!.substring(0, 30)}...' 
+              : post.content!)
+          : '(no content)';
+      print('✅ Post loaded successfully: $contentPreview');
       
       // Tutup loading
       if (context.mounted) Navigator.pop(context);
       
       // Navigate ke detail page
       if (context.mounted) {
+        print('🚀 Navigating to PostDetailPage');
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -120,13 +149,19 @@ class _RiwayatPageState extends State<RiwayatPage> {
         );
       }
     } catch (e) {
+      print('❌ Error loading post: $e');
+      
       // Tutup loading
       if (context.mounted) Navigator.pop(context);
       
       // Tampilkan error
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat postingan: $e')),
+          SnackBar(
+            content: Text('Gagal memuat postingan: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
         );
       }
     }
@@ -182,8 +217,13 @@ class _RiwayatPageState extends State<RiwayatPage> {
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             // Tambahkan onTap hanya untuk riwayat yang clickable
                             onTap: h.isClickable 
-                              ? () => _navigateToPost(context, h.postId!)
-                              : null,
+                              ? () {
+                                  print('👆 Tapped on history: type=${h.type}, postId=${h.postId}, isClickable=${h.isClickable}');
+                                  _navigateToPost(context, h.postId!);
+                                }
+                              : () {
+                                  print('⚠️ Tapped on non-clickable history: type=${h.type}, postId=${h.postId}');
+                                },
                             // Tambahkan trailing icon untuk item yang bisa diklik
                             trailing: h.isClickable 
                               ? const Icon(Icons.chevron_right, color: Colors.grey)

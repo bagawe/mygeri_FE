@@ -26,45 +26,62 @@ class _SplashScreenState extends State<SplashScreen> {
 
     try {
       print('=== SPLASH SCREEN: Checking auto-login ===');
+      print('⏰ Current time: ${DateTime.now()}');
       
       // Check if user is logged in
       final isLoggedIn = await _authService.isLoggedIn();
-      print('Is logged in: $isLoggedIn');
+      print('🔐 Is logged in: $isLoggedIn');
 
       if (isLoggedIn) {
         // Try to refresh token to verify it's still valid
         try {
-          print('Attempting to refresh token...');
+          print('🔄 Attempting to refresh token...');
           await _authService.refreshToken();
-          print('✅ Token refreshed successfully');
+          print('✅ Token refreshed successfully - Session is VALID');
 
           // Token valid, navigate to home
           if (mounted) {
-            print('Navigating to HomePage...');
+            print('🏠 Navigating to HomePage...');
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => const HomePage()),
             );
           }
-        } on SessionExpiredException {
+        } on SessionExpiredException catch (e) {
           // Token invalid/expired, go to onboarding
-          print('❌ Session expired, navigating to Onboarding...');
+          print('❌ Session expired: $e');
+          print('📱 Navigating to Onboarding...');
           if (mounted) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => const OnboardingScreen()),
             );
           }
         } catch (e) {
-          // Any error, go to onboarding
-          print('❌ Error refreshing token: $e, navigating to Onboarding...');
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-            );
+          // Network error or other issues - try to stay logged in
+          print('⚠️ Error refreshing token: $e');
+          print('🔍 Checking if we should keep user logged in...');
+          
+          // If we have tokens, try to use them (maybe network is down)
+          final hasTokens = await _authService.isLoggedIn();
+          if (hasTokens) {
+            print('💾 Tokens exist, keeping user logged in despite refresh error');
+            print('🏠 Navigating to HomePage (with potentially stale token)...');
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const HomePage()),
+              );
+            }
+          } else {
+            print('❌ No tokens found, navigating to Onboarding...');
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+              );
+            }
           }
         }
       } else {
         // Not logged in, go to onboarding
-        print('Not logged in, navigating to Onboarding...');
+        print('🚪 Not logged in, navigating to Onboarding...');
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const OnboardingScreen()),
@@ -73,7 +90,8 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (e) {
       // Error checking login status, go to onboarding
-      print('❌ Error checking login status: $e, navigating to Onboarding...');
+      print('❌ Error checking login status: $e');
+      print('📱 Navigating to Onboarding as fallback...');
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const OnboardingScreen()),
