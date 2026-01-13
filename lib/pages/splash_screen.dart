@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../services/storage_service.dart';
 import 'home_page.dart';
 import 'onboarding_page.dart' show OnboardingScreen;
 
@@ -13,6 +14,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final AuthService _authService = AuthService();
+  final StorageService _storage = StorageService();
 
   @override
   void initState() {
@@ -33,6 +35,42 @@ class _SplashScreenState extends State<SplashScreen> {
       print('🔐 Is logged in: $isLoggedIn');
 
       if (isLoggedIn) {
+        // CHECK SESSION EXPIRY (1 bulan sliding window)
+        print('🕐 Checking session expiry...');
+        final isSessionValid = await _storage.isSessionValid();
+        
+        if (!isSessionValid) {
+          // Session expired (user tidak buka app selama 1 bulan)
+          print('❌ Session expired (tidak buka app selama 1 bulan)');
+          print('🚪 Forcing logout...');
+          
+          await _authService.logout();
+          
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+            );
+            
+            // Show message to user
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Sesi Anda telah berakhir. Silakan login kembali.'),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
+            });
+          }
+          return;
+        }
+        
+        // Session valid - EXTEND IT (reset to 1 bulan dari sekarang)
+        print('✅ Session valid - extending expiry...');
+        await _storage.extendSessionExpiry();
+        
         // Try to refresh token to verify it's still valid
         try {
           print('🔄 Attempting to refresh token...');

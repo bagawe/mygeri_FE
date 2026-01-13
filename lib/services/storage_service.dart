@@ -16,6 +16,7 @@ class StorageService {
   static const _userNameKey = 'user_name';
   static const _userEmailKey = 'user_email';
   static const _savedAccountsKey = 'saved_accounts'; // JSON array of saved accounts
+  static const _sessionExpiryKey = 'session_expiry'; // Session expiry timestamp
 
   // Save tokens - immediate memory cache + WAIT for secure storage
   Future<void> saveTokens(String accessToken, String refreshToken) async {
@@ -227,6 +228,92 @@ class StorageService {
       print('✅ Account removed');
     } catch (e) {
       print('⚠️ Failed to remove account: $e');
+    }
+  }
+
+  // ==================== SESSION EXPIRY MANAGEMENT ====================
+  
+  /// Set session expiry to 1 month from now
+  /// Call this after successful login
+  Future<void> setSessionExpiry() async {
+    try {
+      final expiryDate = DateTime.now().add(const Duration(days: 30));
+      await _storage.write(
+        key: _sessionExpiryKey, 
+        value: expiryDate.toIso8601String(),
+      );
+      print('✅ Session expiry set to: ${expiryDate.toString()}');
+      print('   (1 bulan dari sekarang)');
+    } catch (e) {
+      print('❌ Failed to set session expiry: $e');
+    }
+  }
+
+  /// Extend session expiry to 1 month from now
+  /// Call this every time user opens the app
+  Future<void> extendSessionExpiry() async {
+    try {
+      final newExpiryDate = DateTime.now().add(const Duration(days: 30));
+      await _storage.write(
+        key: _sessionExpiryKey,
+        value: newExpiryDate.toIso8601String(),
+      );
+      print('🔄 Session extended to: ${newExpiryDate.toString()}');
+      print('   (1 bulan dari sekarang)');
+    } catch (e) {
+      print('❌ Failed to extend session: $e');
+    }
+  }
+
+  /// Check if session has expired
+  /// Returns true if session is still valid, false if expired
+  Future<bool> isSessionValid() async {
+    try {
+      final expiryString = await _storage.read(key: _sessionExpiryKey);
+      
+      if (expiryString == null || expiryString.isEmpty) {
+        print('⚠️ No session expiry found - session considered invalid');
+        return false;
+      }
+
+      final expiryDate = DateTime.parse(expiryString);
+      final now = DateTime.now();
+      final isValid = now.isBefore(expiryDate);
+      
+      if (isValid) {
+        final remaining = expiryDate.difference(now);
+        print('✅ Session valid - expires in ${remaining.inDays} days');
+      } else {
+        final elapsed = now.difference(expiryDate);
+        print('❌ Session expired ${elapsed.inDays} days ago');
+      }
+      
+      return isValid;
+    } catch (e) {
+      print('❌ Error checking session validity: $e');
+      return false;
+    }
+  }
+
+  /// Get session expiry date
+  Future<DateTime?> getSessionExpiry() async {
+    try {
+      final expiryString = await _storage.read(key: _sessionExpiryKey);
+      if (expiryString == null || expiryString.isEmpty) return null;
+      return DateTime.parse(expiryString);
+    } catch (e) {
+      print('❌ Error getting session expiry: $e');
+      return null;
+    }
+  }
+
+  /// Clear session expiry (called during logout)
+  Future<void> clearSessionExpiry() async {
+    try {
+      await _storage.delete(key: _sessionExpiryKey);
+      print('✅ Session expiry cleared');
+    } catch (e) {
+      print('❌ Failed to clear session expiry: $e');
     }
   }
 }

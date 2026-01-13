@@ -6,6 +6,7 @@ import '../../services/api_service.dart';
 import '../feed/feed_page.dart';
 import '../feed/create_post_page.dart';
 import '../hashtag/trending_hashtags_widget.dart';
+import '../radar/radar_page.dart';
 
 class BerandaPage extends StatefulWidget {
   const BerandaPage({super.key});
@@ -177,9 +178,22 @@ class _BerandaPageState extends State<BerandaPage> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: menuItems.map((item) {
+                children: menuItems.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  
                   return GestureDetector(
-                    onTap: () => _showComingSoonDialog(item['label']),
+                    onTap: () {
+                      // Radar menu (index 2) navigates to RadarPage
+                      if (index == 2 && item['label'] == 'Radar') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const RadarPage()),
+                        );
+                      } else {
+                        _showComingSoonDialog(item['label']);
+                      }
+                    },
                     child: Column(
                       children: [
                         Container(

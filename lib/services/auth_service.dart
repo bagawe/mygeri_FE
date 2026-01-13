@@ -121,6 +121,10 @@ class AuthService {
           email: user['email'] as String? ?? '',
         );
 
+        // Set session expiry to 1 month from now
+        await _storage.setSessionExpiry();
+        print('✅ Session expiry set (30 days)');
+
         // Catat riwayat login
         try {
           await HistoryService().logHistory('login', description: 'Login berhasil');
