@@ -4,7 +4,14 @@ import '../models/kta_models.dart';
 import 'storage_service.dart';
 
 class KTAApiService {
-  final String baseUrl = 'http://103.127.138.40:3030/api/kta';
+  // Local backend for testing (localhost - recommended for consistent development)
+  final String baseUrl = 'http://localhost:3030/api/kta';
+  // Alternative URLs for different network configurations:
+  // final String baseUrl = 'http://10.194.77.48:3030/api/kta'; // Current Mac IP
+  // final String baseUrl = 'http://10.194.183.83:3030/api/kta'; // Old Mac IP
+  // final String baseUrl = 'http://10.132.51.232:3030/api/kta'; // Phone hotspot IP
+  // final String baseUrl = 'http://10.0.2.2:3030/api/kta'; // Android emulator
+  // final String baseUrl = 'http://103.127.138.40:3030/api/kta'; // Production
   final _storage = StorageService();
 
   Future<String?> _getToken() async {

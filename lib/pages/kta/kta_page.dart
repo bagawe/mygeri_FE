@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../models/kta_models.dart';
-import '../../services/kta_api_service.dart';
+import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/kta/kta_card_front.dart';
 import '../../widgets/kta/kta_card_back.dart';
@@ -15,7 +20,7 @@ class KTAPage extends StatefulWidget {
 }
 
 class _KTAPageState extends State<KTAPage> {
-  final KTAApiService _ktaApi = KTAApiService();
+  final ApiService _apiService = ApiService();
   final StorageService _storage = StorageService();
 
   KTAData? _ktaData;
@@ -37,7 +42,7 @@ class _KTAPageState extends State<KTAPage> {
 
     try {
       // Try to get from API first
-      final ktaData = await _ktaApi.getMyStatus();
+      final ktaData = await _apiService.getMyKTAStatus();
       setState(() {
         _ktaData = ktaData;
         _isLoading = false;
@@ -396,12 +401,219 @@ class _KTAPageState extends State<KTAPage> {
   }
 
   Future<void> _downloadKTA() async {
-    // TODO: Implement download functionality using screenshot package
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fitur download akan segera tersedia'),
-        backgroundColor: Colors.blue,
+    try {
+      setState(() => _isLoading = true);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Membuat PDF KTA...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+      // Generate PDF
+      final pdf = pw.Document();
+      
+      // Card size: 85.6mm x 53.98mm (standard credit card size)
+      const cardWidth = 85.6 * PdfPageFormat.mm;
+      const cardHeight = 53.98 * PdfPageFormat.mm;
+      
+      // Add front page
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat(cardWidth, cardHeight, marginAll: 0),
+          build: (context) {
+            return pw.Container(
+              width: cardWidth,
+              height: cardHeight,
+              decoration: pw.BoxDecoration(
+                gradient: pw.LinearGradient(
+                  colors: [
+                    PdfColor.fromHex('#B71C1C'),
+                    PdfColor.fromHex('#D32F2F'),
+                  ],
+                ),
+              ),
+              child: pw.Center(
+                child: pw.Column(
+                  mainAxisAlignment: pw.MainAxisAlignment.center,
+                  children: [
+                    pw.Text(
+                      'KARTU TANDA ANGGOTA',
+                      style: pw.TextStyle(
+                        color: PdfColors.white,
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 8),
+                    pw.Text(
+                      _ktaData!.name,
+                      style: pw.TextStyle(
+                        color: PdfColors.white,
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      'No. KTA: ${_ktaData!.cardNumber}',
+                      style: const pw.TextStyle(
+                        color: PdfColors.white,
+                        fontSize: 10,
+                      ),
+                    ),
+                    if (_ktaData!.ktaVerified) ...[
+                      pw.SizedBox(height: 8),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.green,
+                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                        ),
+                        child: pw.Text(
+                          '✓ TERVERIFIKASI',
+                          style: pw.TextStyle(
+                            color: PdfColors.white,
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+      
+      // Add back page
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat(cardWidth, cardHeight, marginAll: 0),
+          build: (context) {
+            return pw.Container(
+              width: cardWidth,
+              height: cardHeight,
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.white,
+                border: pw.Border.all(color: PdfColor.fromHex('#B71C1C'), width: 2),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'DATA ANGGOTA',
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColor.fromHex('#B71C1C'),
+                    ),
+                  ),
+                  pw.Divider(color: PdfColor.fromHex('#B71C1C'), thickness: 1),
+                  pw.SizedBox(height: 4),
+                  _buildPdfRow('Email', _ktaData!.email),
+                  _buildPdfRow('No. KTA', _ktaData!.cardNumber),
+                  if (_ktaData!.ktaVerified && _ktaData!.verifiedBy != null) ...[
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      'VERIFIKASI',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColor.fromHex('#B71C1C'),
+                      ),
+                    ),
+                    pw.Divider(color: PdfColor.fromHex('#B71C1C'), thickness: 1),
+                    pw.SizedBox(height: 2),
+                    _buildPdfRow('Nama', _ktaData!.verifiedBy!.name),
+                    if (_ktaData!.verifiedBy!.email != null)
+                      _buildPdfRow('Email', _ktaData!.verifiedBy!.email!),
+                    if (_ktaData!.ktaVerifiedAt != null)
+                      _buildPdfRow('Tanggal', _formatDate(_ktaData!.ktaVerifiedAt!)),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+      );
+      
+      // Save PDF
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/kta_${_ktaData!.cardNumber}_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await file.writeAsBytes(await pdf.save());
+      
+      // Share PDF
+      if (mounted) {
+        await Share.shareXFiles([XFile(file.path)], text: 'KTA ${_ktaData!.name}');
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF KTA berhasil dibuat'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuat PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  pw.Widget _buildPdfRow(String label, String value) {
+    return pw.Container(
+      margin: const pw.EdgeInsets.only(bottom: 2),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Container(
+            width: 60,
+            child: pw.Text(
+              '$label:',
+              style: pw.TextStyle(
+                fontSize: 8,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Text(
+              value,
+              style: const pw.TextStyle(
+                fontSize: 8,
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    // Format: 12 Des 2021
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    final day = date.day;
+    final month = months[date.month - 1];
+    final year = date.year;
+    return '$day $month $year';
   }
 }

@@ -8,7 +8,7 @@
     <application
         android:label="mygeri"
         android:name="${applicationName}"
-        android:icon="@mipmap/my_geri">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"

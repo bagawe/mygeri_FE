@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/kta_models.dart';
-import '../../services/kta_api_service.dart';
+import '../../services/api_service.dart';
 
 /// Halaman statistik KTA untuk admin
 class AdminKTAStatisticsPage extends StatefulWidget {
@@ -11,7 +11,7 @@ class AdminKTAStatisticsPage extends StatefulWidget {
 }
 
 class _AdminKTAStatisticsPageState extends State<AdminKTAStatisticsPage> {
-  final KTAApiService _ktaApi = KTAApiService();
+  final ApiService _ktaApi = ApiService();
 
   KTAStatistics? _statistics;
   bool _isLoading = true;
@@ -30,9 +30,9 @@ class _AdminKTAStatisticsPageState extends State<AdminKTAStatisticsPage> {
     });
 
     try {
-      final stats = await _ktaApi.getStatistics();
+      final stats = await _ktaApi.getKTAStatistics();
       setState(() {
-        _statistics = stats;
+        _statistics = KTAStatistics.fromJson(stats);
         _isLoading = false;
       });
     } catch (e) {
@@ -290,7 +290,7 @@ class _AdminKTAStatisticsPageState extends State<AdminKTAStatisticsPage> {
                   const Divider(height: 24),
                 ],
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -397,7 +397,7 @@ class _AdminKTAStatisticsPageState extends State<AdminKTAStatisticsPage> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

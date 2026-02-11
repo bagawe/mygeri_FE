@@ -30,45 +30,13 @@ class _SplashScreenState extends State<SplashScreen> {
       print('=== SPLASH SCREEN: Checking auto-login ===');
       print('⏰ Current time: ${DateTime.now()}');
       
-      // Check if user is logged in
+      // Check if user is logged in (includes session validation)
       final isLoggedIn = await _authService.isLoggedIn();
-      print('🔐 Is logged in: $isLoggedIn');
+      print('🔐 Is logged in (with valid session): $isLoggedIn');
 
       if (isLoggedIn) {
-        // CHECK SESSION EXPIRY (1 bulan sliding window)
-        print('🕐 Checking session expiry...');
-        final isSessionValid = await _storage.isSessionValid();
-        
-        if (!isSessionValid) {
-          // Session expired (user tidak buka app selama 1 bulan)
-          print('❌ Session expired (tidak buka app selama 1 bulan)');
-          print('🚪 Forcing logout...');
-          
-          await _authService.logout();
-          
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-            );
-            
-            // Show message to user
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Sesi Anda telah berakhir. Silakan login kembali.'),
-                    backgroundColor: Colors.orange,
-                    duration: Duration(seconds: 3),
-                  ),
-                );
-              }
-            });
-          }
-          return;
-        }
-        
         // Session valid - EXTEND IT (reset to 1 bulan dari sekarang)
-        print('✅ Session valid - extending expiry...');
+        print('✅ Session valid - extending expiry to 30 days from now...');
         await _storage.extendSessionExpiry();
         
         // Try to refresh token to verify it's still valid

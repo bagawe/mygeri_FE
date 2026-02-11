@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../services/kta_api_service.dart';
+import '../../services/api_service.dart';
 
 /// Halaman untuk admin verifikasi KTA user
 class AdminVerifyKTAPage extends StatefulWidget {
@@ -17,7 +17,7 @@ class AdminVerifyKTAPage extends StatefulWidget {
 }
 
 class _AdminVerifyKTAPageState extends State<AdminVerifyKTAPage> {
-  final KTAApiService _ktaApi = KTAApiService();
+  final ApiService _ktaApi = ApiService();
   final TextEditingController _notesController = TextEditingController();
 
   bool _isSubmitting = false;

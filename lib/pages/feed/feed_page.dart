@@ -4,6 +4,7 @@ import '../../services/post_service.dart';
 import '../../services/api_service.dart';
 import 'create_post_page.dart';
 import 'post_detail_page.dart';
+import '../maintenance/maintenance_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:carousel_slider/carousel_slider.dart';
 
@@ -73,6 +74,22 @@ class _FeedPageState extends State<FeedPage> {
         });
       }
     } catch (e) {
+      // Cek apakah ini network error (Connection refused)
+      if ((e.toString().contains('Connection refused') || 
+          e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup')) && _posts.isEmpty) {
+        
+        if (!mounted) return;
+        
+        // Navigate ke maintenance page hanya jika belum ada post yang ter-load
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const MaintenancePage(),
+          ),
+        );
+        return;
+      }
+      
       if (mounted) {
         setState(() {
           _errorMessage = 'Gagal memuat feed: $e';

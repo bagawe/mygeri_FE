@@ -3,15 +3,23 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'storage_service.dart';
 import 'session_manager.dart';
+import '../models/kta_models.dart';
+import '../models/post.dart';
 
 class ApiService {
-  // Base URL - UPDATED FOR REAL DEVICE TESTING (Mac via Phone Hotspot)
-  // Mac IP when connected to phone hotspot
-  // static const String baseUrl = 'http://10.132.51.232:3030';
-  static const String baseUrl = 'http://103.127.138.40:3030';
+  // Base URL - LOCAL BACKEND FOR TESTING
+  // Production server (commented for now)
+  // static const String baseUrl = 'http://103.127.138.40:3030';
   
-  // For emulator use: 'http://10.0.2.2:3030'
-  // For production use: 'https://api.mygeri.com'
+  // Android emulator - use 10.0.2.2 to access host machine localhost
+  static const String baseUrl = 'http://10.0.2.2:3030';
+  
+  // Alternative URLs for different network configurations:
+  // static const String baseUrl = 'http://localhost:3030'; // For macOS/Chrome/iOS Simulator
+  // static const String baseUrl = 'http://10.194.77.48:3030'; // Current Mac IP (for physical device)
+  // static const String baseUrl = 'http://10.194.183.83:3030'; // Old Mac IP
+  // static const String baseUrl = 'http://10.132.51.232:3030'; // Phone hotspot IP
+  // static const String baseUrl = 'https://api.mygeri.com'; // Production
   
   final StorageService _storage = StorageService();
   bool _isRefreshing = false;
@@ -195,12 +203,16 @@ class ApiService {
                 if (accessToken == null || accessToken.isEmpty) {
                   throw Exception('Refresh token response missing accessToken');
                 }
-                if (newRefreshToken == null || newRefreshToken.isEmpty) {
-                  throw Exception('Refresh token response missing refreshToken');
-                }
                 
-                // Save new tokens
-                await _storage.saveTokens(accessToken, newRefreshToken);
+                // Jika backend tidak mengirim refreshToken baru, gunakan yang lama
+                final tokenToSave = (newRefreshToken != null && newRefreshToken.isNotEmpty) 
+                    ? newRefreshToken 
+                    : refreshToken;
+                
+                print('✅ Using refresh token: ${tokenToSave == refreshToken ? "existing" : "new"}');
+                
+                // Save tokens
+                await _storage.saveTokens(accessToken, tokenToSave);
                 
                 _isRefreshing = false;
                 print('✅ Token refreshed successfully');
@@ -335,6 +347,78 @@ class ApiService {
     }
 
     return await _handleResponse(response);
+  }
+
+  // ===== KTA API METHODS =====
+
+  /// Get My KTA Status
+  Future<KTAData> getMyKTAStatus() async {
+    final response = await get('/api/kta/my-status', requiresAuth: true);
+    return KTAData.fromJson(response['data']);
+  }
+
+  /// Admin: Verify KTA
+  Future<KTAData> verifyKTA({
+    required int userId,
+    required bool verified,
+    String? notes,
+  }) async {
+    final response = await post(
+      '/api/kta/admin/verify',
+      {
+        'user_id': userId,
+        'verified': verified,
+        if (notes != null) 'notes': notes,
+      },
+      requiresAuth: true,
+    );
+    return KTAData.fromJson(response['data']);
+  }
+
+  /// Admin: Get Users List for KTA
+  Future<ApiResponse<List<KTAUser>>> getKTAUsersList({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? status,
+  }) async {
+    final queryParams = <String, String>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    if (status != null && status.isNotEmpty) queryParams['status'] = status;
+
+    final queryString = queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final response = await get('/api/kta/admin/users?$queryString', requiresAuth: true);
+
+    final List<KTAUser> users = (response['data'] as List)
+        .map((json) => KTAUser.fromJson(json))
+        .toList();
+
+    return ApiResponse<List<KTAUser>>(
+      success: response['success'],
+      data: users,
+      pagination: response['pagination'] != null
+          ? PaginationModel.fromJson(response['pagination'])
+          : null,
+    );
+  }
+
+  /// Admin: Get KTA Statistics
+  Future<Map<String, dynamic>> getKTAStatistics() async {
+    final response = await get('/api/kta/admin/statistics', requiresAuth: true);
+    return response['data'];
+  }
+
+  /// Admin: Verify QR Code
+  Future<KTAData> verifyQRCode(String qrCode) async {
+    final response = await post(
+      '/api/kta/admin/verify-qr',
+      {'qr_code': qrCode},
+      requiresAuth: true,
+    );
+    return KTAData.fromJson(response['data']);
   }
 }
 

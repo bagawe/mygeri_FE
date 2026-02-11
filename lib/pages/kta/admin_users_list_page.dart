@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/kta_models.dart';
-import '../../services/kta_api_service.dart';
+import '../../models/post.dart';
+import '../../services/api_service.dart';
 import 'admin_verify_page.dart';
 
 /// Halaman untuk admin melihat daftar user dan status KTA mereka
@@ -12,12 +13,12 @@ class AdminUsersListPage extends StatefulWidget {
 }
 
 class _AdminUsersListPageState extends State<AdminUsersListPage> {
-  final KTAApiService _ktaApi = KTAApiService();
+  final ApiService _ktaApi = ApiService();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   List<KTAUser> _users = [];
-  Pagination? _pagination;
+  PaginationModel? _pagination;
   bool _isLoading = true;
   bool _isLoadingMore = false;
   String? _errorMessage;
@@ -43,7 +44,7 @@ class _AdminUsersListPageState extends State<AdminUsersListPage> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent * 0.8) {
-      if (!_isLoadingMore && _pagination?.hasMore == true) {
+      if (!_isLoadingMore && _pagination?.hasNextPage == true) {
         _loadMore();
       }
     }
@@ -59,17 +60,16 @@ class _AdminUsersListPageState extends State<AdminUsersListPage> {
     }
 
     try {
-      final result = await _ktaApi.getUsersList(
+      final result = await _ktaApi.getKTAUsersList(
         status: _statusFilter ?? 'all',
-        role: _roleFilter ?? 'all',
         search: _searchController.text.isEmpty ? null : _searchController.text,
+        page: 1,
         limit: 20,
-        offset: 0,
       );
 
       setState(() {
-        _users = result['users'];
-        _pagination = result['pagination'];
+        _users = result.data ?? [];
+        _pagination = result.pagination;
         _isLoading = false;
       });
     } catch (e) {
@@ -81,22 +81,21 @@ class _AdminUsersListPageState extends State<AdminUsersListPage> {
   }
 
   Future<void> _loadMore() async {
-    if (_isLoadingMore || _pagination?.hasMore != true) return;
+    if (_isLoadingMore || _pagination?.hasNextPage != true) return;
 
     setState(() => _isLoadingMore = true);
 
     try {
-      final result = await _ktaApi.getUsersList(
+      final result = await _ktaApi.getKTAUsersList(
         status: _statusFilter ?? 'all',
-        role: _roleFilter ?? 'all',
         search: _searchController.text.isEmpty ? null : _searchController.text,
+        page: _pagination!.page + 1,
         limit: 20,
-        offset: _users.length,
       );
 
       setState(() {
-        _users.addAll(result['users']);
-        _pagination = result['pagination'];
+        _users.addAll(result.data ?? []);
+        _pagination = result.pagination;
         _isLoadingMore = false;
       });
     } catch (e) {

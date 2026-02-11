@@ -1,3 +1,5 @@
+import 'user_role.dart';
+
 class UserProfile {
   final int id;
   final String uuid;
@@ -8,6 +10,9 @@ class UserProfile {
   final DateTime? lastLogin;
   final DateTime createdAt;
   final DateTime updatedAt;
+  
+  // Roles
+  final List<UserRole> roles;
 
   // Optional fields
   final String? phone;
@@ -51,6 +56,7 @@ class UserProfile {
     this.lastLogin,
     required this.createdAt,
     required this.updatedAt,
+    this.roles = const [],
     this.phone,
     this.bio,
     this.nik,
@@ -74,6 +80,14 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    // Parse roles dari JSON
+    List<UserRole> rolesList = [];
+    if (json['roles'] != null && json['roles'] is List) {
+      rolesList = (json['roles'] as List)
+          .map((roleJson) => UserRole.fromJson(roleJson as Map<String, dynamic>))
+          .toList();
+    }
+    
     return UserProfile(
       id: json['id'] as int? ?? 0,
       uuid: json['uuid'] as String? ?? '',
@@ -86,6 +100,7 @@ class UserProfile {
           : null,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      roles: rolesList,
       phone: json['phone'] as String?,
       bio: json['bio'] as String?,
       nik: json['nik'] as String?,
@@ -176,6 +191,7 @@ class UserProfile {
     String? kegiatan,
     String? fotoKtp,
     String? fotoProfil,
+    List<UserRole>? roles,
   }) {
     return UserProfile(
       id: id,
@@ -187,6 +203,7 @@ class UserProfile {
       lastLogin: lastLogin,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      roles: roles ?? this.roles,
       phone: phone ?? this.phone,
       bio: bio ?? this.bio,
       nik: nik ?? this.nik,

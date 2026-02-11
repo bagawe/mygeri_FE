@@ -245,6 +245,54 @@ class PostService {
     }
   }
 
+  // 3.5 Get User Posts (for profile page)
+  Future<ApiResponse<List<PostModel>>> getUserPosts({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      print('🔍 PostService: Getting user posts (page: $page, limit: $limit)...');
+      
+      // Use getFeed endpoint dan filter client-side karena endpoint /api/posts/user/me belum ada
+      final response = await _apiService.get(
+        '/api/posts?page=$page&limit=$limit',
+        requiresAuth: true,
+      );
+
+      final List<PostModel> allPosts = (response['data'] as List)
+          .map((json) => PostModel.fromJson(json))
+          .toList();
+
+      // Get current user ID dari storage
+      final userData = await _storage.getUserData();
+      final currentUserIdStr = userData['id'];
+      final currentUserId = int.tryParse(currentUserIdStr ?? '') ?? 0;
+      
+      // Filter hanya postingan user yang login (user.id == currentUserId)
+      final userPosts = allPosts
+          .where((post) => post.user.id == currentUserId)
+          .toList();
+
+      // Sort by created date (newest first)
+      userPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      print('✅ PostService: Retrieved ${userPosts.length} user posts dari total ${allPosts.length} posts (user ID: $currentUserId)');
+      return ApiResponse<List<PostModel>>(
+        success: response['success'],
+        data: userPosts,
+        pagination: response['pagination'] != null
+            ? PaginationModel.fromJson(response['pagination'])
+            : null,
+      );
+    } catch (e) {
+      print('❌ PostService: Error getting user posts - $e');
+      return ApiResponse<List<PostModel>>(
+        success: false,
+        message: 'Gagal memuat postingan user: $e',
+      );
+    }
+  }
+
   // 4. Get Post Detail
   Future<ApiResponse<PostModel>> getPostDetail(int postId) async {
     try {

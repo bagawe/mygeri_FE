@@ -130,12 +130,28 @@ class StorageService {
     print('✅ Storage cleared (memory + secure storage)');
   }
 
-  // Check if user is logged in
+  // Check if user is logged in and session is still valid
   Future<bool> isLoggedIn() async {
     final token = await getAccessToken();
-    final isLoggedIn = token != null && token.isNotEmpty;
-    print('🔍 StorageService.isLoggedIn(): $isLoggedIn (token: ${token != null ? "${token.substring(0, 20)}..." : "null"})');
-    return isLoggedIn;
+    final hasToken = token != null && token.isNotEmpty;
+    
+    if (!hasToken) {
+      print('🔍 StorageService.isLoggedIn(): false (no token)');
+      return false;
+    }
+    
+    // Check if session has expired
+    final sessionValid = await isSessionValid();
+    
+    if (!sessionValid) {
+      print('🔍 StorageService.isLoggedIn(): false (session expired)');
+      // Clear expired session
+      await clearAll();
+      return false;
+    }
+    
+    print('🔍 StorageService.isLoggedIn(): true (token valid & session active)');
+    return true;
   }
 
   // Save account credentials for quick login

@@ -168,7 +168,7 @@ class CommentModel {
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     return CommentModel(
       id: json['id'] as int? ?? 0,
-      comment: json['comment'] as String? ?? '',
+      comment: json['content'] as String? ?? json['comment'] as String? ?? '',  // Backend uses 'content'
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),

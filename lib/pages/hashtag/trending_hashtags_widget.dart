@@ -47,10 +47,21 @@ class _TrendingHashtagsWidgetState extends State<TrendingHashtagsWidget> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _errorMessage = e.toString();
-          _isLoading = false;
-        });
+        // Jika network error, hide widget instead of showing error
+        if (e.toString().contains('Connection refused') || 
+            e.toString().contains('SocketException') ||
+            e.toString().contains('Failed host lookup')) {
+          setState(() {
+            _hashtags = []; // Empty list
+            _isLoading = false;
+            _errorMessage = null; // Tidak tampilkan error
+          });
+        } else {
+          setState(() {
+            _errorMessage = e.toString();
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -91,15 +102,8 @@ class _TrendingHashtagsWidgetState extends State<TrendingHashtagsWidget> {
     }
 
     if (_hashtags.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'Belum ada hashtag trending',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ),
-      );
+      // Return empty container instead of showing message when network error
+      return const SizedBox.shrink();
     }
 
     return SingleChildScrollView(

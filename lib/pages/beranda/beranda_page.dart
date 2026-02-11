@@ -7,6 +7,12 @@ import '../feed/feed_page.dart';
 import '../feed/create_post_page.dart';
 import '../hashtag/trending_hashtags_widget.dart';
 import '../radar/radar_page.dart';
+import '../kta/kta_page.dart';
+import '../agenda/agenda_page.dart';
+import '../announcement/announcement_page.dart';
+import '../maintenance/maintenance_page.dart';
+
+import '../voting/voting_page.dart';
 
 class BerandaPage extends StatefulWidget {
   const BerandaPage({super.key});
@@ -62,6 +68,22 @@ class _BerandaPageState extends State<BerandaPage> {
     } catch (e) {
       print('❌ Error loading profile: $e');
       
+      // Cek apakah ini network error (Connection refused)
+      if (e.toString().contains('Connection refused') || 
+          e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup')) {
+        
+        if (!mounted) return;
+        
+        // Navigate ke maintenance page
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const MaintenancePage(),
+          ),
+        );
+        return;
+      }
+      
       if (!mounted) return;
       
       setState(() {
@@ -73,6 +95,88 @@ class _BerandaPageState extends State<BerandaPage> {
         print('⚠️ Profile load timeout - continuing with cached/placeholder data');
       }
     }
+  }
+
+  // Fungsi untuk mengecek apakah user memiliki akses ke fitur tertentu
+  bool _hasAccessToFeature(String featureName) {
+    if (_userProfile == null || _userProfile!.roles.isEmpty) {
+      return false;
+    }
+    
+    // Untuk fitur Agenda, My Gerindra, dan Voting - hanya kader dan admin yang bisa akses
+    if (featureName == 'Agenda' || featureName == 'My Gerindra' || featureName == 'Voting') {
+      final userRole = _userProfile!.roles.first.role.toLowerCase();
+      return userRole == 'kader' || userRole == 'admin';
+    }
+    
+    return true; // Fitur lain bisa diakses semua role
+  }
+  
+  // Fungsi untuk menampilkan popup akses terbatas
+  void _showAccessDeniedDialog(String featureName) {
+    final userRole = _userProfile?.roles.first.role ?? 'simpatisan';
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.lock_outline, color: Colors.red[700], size: 28),
+            const SizedBox(width: 12),
+            const Text('Akses Terbatas'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Fitur $featureName hanya tersedia untuk Kader dan Admin.',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.person_outline, color: Colors.grey[700], size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Role Anda: ${userRole.toUpperCase()}',
+                    style: TextStyle(
+                      fontSize: 14, 
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Untuk mengakses fitur ini, silakan hubungi admin untuk upgrade role Anda menjadi Kader.',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Mengerti',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showComingSoonDialog(String featureName) {
@@ -184,13 +288,57 @@ class _BerandaPageState extends State<BerandaPage> {
                   
                   return GestureDetector(
                     onTap: () {
+                      // My Gerindra menu (index 0) navigates to AnnouncementPage
+                      if (index == 0 && item['label'] == 'My Gerindra') {
+                        // Cek akses role sebelum navigasi
+                        if (_hasAccessToFeature('My Gerindra')) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AnnouncementPage()),
+                          );
+                        } else {
+                          _showAccessDeniedDialog('My Gerindra');
+                        }
+                      }
+                      // KTA menu (index 1) navigates to KTAPage
+                      else if (index == 1 && item['label'] == 'KTA') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const KTAPage()),
+                        );
+                      }
                       // Radar menu (index 2) navigates to RadarPage
-                      if (index == 2 && item['label'] == 'Radar') {
+                      else if (index == 2 && item['label'] == 'Radar') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const RadarPage()),
                         );
-                      } else {
+                      }
+                      // Agenda menu (index 3) navigates to AgendaPage
+                      else if (index == 3 && item['label'] == 'Agenda') {
+                        // Cek akses role sebelum navigasi
+                        if (_hasAccessToFeature('Agenda')) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AgendaPage()),
+                          );
+                        } else {
+                          _showAccessDeniedDialog('Agenda');
+                        }
+                      }
+                      // Voting menu (index 4) - Navigate to VotingPage
+                      else if (index == 4 && item['label'] == 'Voting') {
+                        // Cek akses role sebelum navigasi
+                        if (_hasAccessToFeature('Voting')) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const VotingPage()),
+                          );
+                        } else {
+                          _showAccessDeniedDialog('Voting');
+                        }
+                      }
+                      else {
                         _showComingSoonDialog(item['label']);
                       }
                     },

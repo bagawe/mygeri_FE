@@ -35,14 +35,25 @@ class KTAData {
   });
 
   factory KTAData.fromJson(Map<String, dynamic> json) {
+    // Safe parsing untuk userId - bisa string atau int dari API
+    dynamic userIdValue = json['user_id'] ?? json['id'];
+    int parsedUserId = 0;
+    if (userIdValue != null) {
+      if (userIdValue is int) {
+        parsedUserId = userIdValue;
+      } else if (userIdValue is String) {
+        parsedUserId = int.tryParse(userIdValue) ?? 0;
+      }
+    }
+
     return KTAData(
-      userId: json['user_id'] ?? json['id'],
-      name: json['name'],
-      email: json['email'],
-      role: json['role'],
-      ktaVerified: json['kta_verified'] ?? false,
+      userId: parsedUserId,
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? '',
+      ktaVerified: json['kta_verified'] ?? json['verified'] ?? false,
       ktaVerifiedAt: json['kta_verified_at'] != null
-          ? DateTime.parse(json['kta_verified_at'])
+          ? DateTime.tryParse(json['kta_verified_at'].toString())
           : null,
       verifiedBy: json['verified_by'] != null
           ? VerifiedBy.fromJson(json['verified_by'])
@@ -50,7 +61,7 @@ class KTAData {
       cardNumber: json['card_number'] ?? '',
       canPrint: json['can_print'] ?? false,
       message: json['message'] ?? '',
-      fotoProfil: json['fotoProfil'],
+      fotoProfil: json['fotoProfil'] ?? json['foto_profil'],
       tanggalLahir: json['tanggal_lahir'],
       alamatLengkap: json['alamat_lengkap'],
       jenisKelamin: json['jenis_kelamin'],
@@ -111,9 +122,20 @@ class VerifiedBy {
   });
 
   factory VerifiedBy.fromJson(Map<String, dynamic> json) {
+    // Safe parsing untuk ID yang mungkin string
+    dynamic idValue = json['id'];
+    int parsedId = 0;
+    if (idValue != null) {
+      if (idValue is int) {
+        parsedId = idValue;
+      } else if (idValue is String) {
+        parsedId = int.tryParse(idValue) ?? 0;
+      }
+    }
+    
     return VerifiedBy(
-      id: json['id'],
-      name: json['name'],
+      id: parsedId,
+      name: json['name'] ?? '',
       email: json['email'],
     );
   }
@@ -152,20 +174,33 @@ class KTAUser {
   });
 
   factory KTAUser.fromJson(Map<String, dynamic> json) {
+    // Safe parsing untuk ID yang mungkin string
+    dynamic idValue = json['id'];
+    int parsedId = 0;
+    if (idValue != null) {
+      if (idValue is int) {
+        parsedId = idValue;
+      } else if (idValue is String) {
+        parsedId = int.tryParse(idValue) ?? 0;
+      }
+    }
+
     return KTAUser(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      role: json['role'],
-      ktaVerified: json['kta_verified'] ?? false,
+      id: parsedId,
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? '',
+      ktaVerified: json['kta_verified'] ?? json['verified'] ?? false,
       ktaVerifiedAt: json['kta_verified_at'] != null
-          ? DateTime.parse(json['kta_verified_at'])
+          ? DateTime.tryParse(json['kta_verified_at'].toString())
           : null,
       verifiedBy: json['verified_by'] != null
           ? VerifiedBy.fromJson(json['verified_by'])
           : null,
       cardNumber: json['card_number'] ?? '',
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 

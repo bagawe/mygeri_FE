@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/user_profile.dart';
+import '../../models/post.dart';
 import '../../services/profile_service.dart';
 import '../../services/api_service.dart';
+import '../../services/post_service.dart';
 import 'edit_profil_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -13,15 +16,19 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final ProfileService _profileService = ProfileService(ApiService());
+  final PostService _postService = PostService(ApiService());
+  
   UserProfile? _userProfile;
+  List<PostModel> _userPosts = [];
   bool _isLoading = true;
+  bool _isLoadingPosts = false;
   String? _errorMessage;
   bool _isLoadingInProgress = false; // Prevent multiple simultaneous loads
 
   @override
   void initState() {
     super.initState();
-    // Load profile immediately when page is opened
+    // Load profile and posts immediately when page is opened
     _loadProfile();
   }
 
@@ -56,6 +63,9 @@ class _ProfilePageState extends State<ProfilePage> {
           _userProfile = profile;
           _isLoading = false;
         });
+        
+        // Load user posts after profile is loaded
+        _loadUserPosts();
       }
     } catch (e) {
       if (mounted) {
@@ -67,6 +77,30 @@ class _ProfilePageState extends State<ProfilePage> {
       print('❌ Error loading profile: $e');
     } finally {
       _isLoadingInProgress = false;
+    }
+  }
+
+  Future<void> _loadUserPosts() async {
+    setState(() {
+      _isLoadingPosts = true;
+    });
+
+    try {
+      final response = await _postService.getUserPosts(page: 1, limit: 20);
+      if (mounted) {
+        setState(() {
+          _userPosts = response.data ?? [];
+          _isLoadingPosts = false;
+        });
+        print('✅ Loaded ${_userPosts.length} user posts');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingPosts = false;
+        });
+      }
+      print('❌ Error loading user posts: $e');
     }
   }
 
@@ -239,6 +273,51 @@ class _ProfilePageState extends State<ProfilePage> {
             
             // Profile Details
             _buildProfileCard(),
+            
+            // Posts Section
+            if (_userPosts.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 30),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4),
+                    child: Text(
+                      'Postingan Saya',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ..._userPosts.map((post) => _buildPostCard(post)).toList(),
+                ],
+              )
+            else if (!_isLoadingPosts)
+              Padding(
+                padding: const EdgeInsets.only(top: 30),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.post_add_outlined, size: 48, color: Colors.grey[400]),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Belum ada postingan',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.only(top: 30),
+                child: CircularProgressIndicator(),
+              ),
           ],
         ),
       ),
@@ -372,4 +451,196 @@ class _ProfilePageState extends State<ProfilePage> {
     
     return parts.isEmpty ? '-' : parts.join(', ');
   }
+
+  Widget _buildPostCard(PostModel post) {
+    final timeAgo = _getTimeAgo(post.createdAt);
+    
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Post header dengan waktu
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  post.user.username,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  timeAgo,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // Post content
+            if (post.content != null && post.content!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  post.content!,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            
+            // Post images
+            if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildImageGallery(post.imageUrls!),
+              ),
+            
+            // Location
+            if (post.location != null && post.location!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      post.location!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            // Action buttons
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildActionButton(
+                  icon: Icons.favorite_border,
+                  label: post.likeCount.toString(),
+                  onTap: () {},
+                ),
+                _buildActionButton(
+                  icon: Icons.comment_outlined,
+                  label: post.commentCount.toString(),
+                  onTap: () {},
+                ),
+                _buildActionButton(
+                  icon: Icons.share_outlined,
+                  label: 'Bagikan',
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageGallery(List<String> imageUrls) {
+    if (imageUrls.isEmpty) return const SizedBox.shrink();
+    
+    if (imageUrls.length == 1) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          '${ApiService.baseUrl}${imageUrls[0]}',
+          width: double.infinity,
+          height: 250,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: double.infinity,
+              height: 250,
+              color: Colors.grey[300],
+              child: const Icon(Icons.image_not_supported),
+            );
+          },
+        ),
+      );
+    }
+    
+    // Grid untuk multiple images
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemCount: imageUrls.length,
+      itemBuilder: (context, index) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            '${ApiService.baseUrl}${imageUrls[index]}',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: const Icon(Icons.image_not_supported),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.grey[600]),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inSeconds < 60) {
+      return 'Baru saja';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m yang lalu';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h yang lalu';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d yang lalu';
+    } else {
+      return DateFormat('dd MMM yyyy').format(dateTime);
+    }
+  }
 }
+
