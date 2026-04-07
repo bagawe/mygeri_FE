@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import '../pages/beranda/beranda_page.dart';
 import '../pages/riwayat/riwayat_page.dart';
 import '../pages/profil/profile_page.dart';
@@ -81,33 +82,21 @@ class _HomePageState extends State<HomePage> {
           _selectedIndex == 4 ? _getPage(4) : Container(),  // PengaturanPage - lazy
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.red,
-        unselectedItemColor: Colors.black,
-        currentIndex: _selectedIndex,
+      bottomNavigationBar: CurvedNavigationBar(
+        index: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Riwayat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Pesan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Pengaturan',
-          ),
+        backgroundColor: Colors.white,
+        color: Colors.red[700]!,
+        buttonBackgroundColor: Colors.red[700],
+        height: 65,
+        animationCurve: Curves.easeInOut,
+        animationDuration: const Duration(milliseconds: 300),
+        items: [
+          Icon(Icons.home, color: Colors.white, size: 28),
+          Icon(Icons.history, color: Colors.white, size: 28),
+          Icon(Icons.person, color: Colors.white, size: 28),
+          Icon(Icons.mail, color: Colors.white, size: 28),
+          Icon(Icons.settings, color: Colors.white, size: 28),
         ],
       ),
     );

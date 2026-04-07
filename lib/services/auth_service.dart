@@ -121,6 +121,36 @@ class AuthService {
           email: user['email'] as String? ?? '',
         );
 
+        // Simpan role dari API response (JANGAN dari JWT decode!)
+        // Backend bisa kirim 'role' (string) atau 'roles' (array of objects)
+        String userRole = 'simpatisan';
+        
+        if (user['role'] != null && user['role'] is String && (user['role'] as String).isNotEmpty) {
+          // Format 1: flat string "role": "kader"
+          userRole = user['role'] as String;
+        } else if (user['roles'] != null && user['roles'] is List && (user['roles'] as List).isNotEmpty) {
+          // Format 2: array "roles": [{"role": "kader", ...}]
+          final rolesList = user['roles'] as List;
+          for (final r in rolesList) {
+            final roleName = (r is Map) ? (r['role'] as String? ?? '') : r.toString();
+            if (roleName == 'admin') {
+              userRole = 'admin';
+              break;
+            } else if (roleName == 'kader') {
+              userRole = 'kader';
+            } else if (roleName == 'simpatisan' && userRole != 'kader') {
+              userRole = 'simpatisan';
+            }
+          }
+        }
+        
+        print('🔍 AuthService: raw user[role] = ${user['role']}');
+        print('🔍 AuthService: raw user[roles] = ${user['roles']}');
+        print('🔍 AuthService: resolved role = $userRole');
+        
+        await _storage.saveUserRole(userRole);
+        print('✅ User role saved from login response: $userRole');
+
         // Set session expiry to 1 month from now
         await _storage.setSessionExpiry();
         print('✅ Session expiry set (30 days)');

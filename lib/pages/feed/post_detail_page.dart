@@ -110,6 +110,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
         );
       }
     }
+    // NOTE: Backend otomatis membuat notifikasi saat like endpoint dipanggil
   }
 
   Future<void> _addComment() async {
@@ -136,6 +137,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
         // Hide keyboard
         FocusScope.of(context).unfocus();
+
+        // NOTE: Backend otomatis membuat notifikasi saat comment endpoint dipanggil
       } else if (mounted) {
         setState(() {
           _isAddingComment = false;

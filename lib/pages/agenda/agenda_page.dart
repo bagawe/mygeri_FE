@@ -146,6 +146,7 @@ class _AgendaPageState extends State<AgendaPage> {
 
     return Column(
       children: [
+        // Calendar
         Container(
           color: Colors.white,
           child: TableCalendar(
@@ -204,6 +205,7 @@ class _AgendaPageState extends State<AgendaPage> {
           ),
         ),
         const Divider(height: 1),
+        // Agenda list for selected day
         Expanded(
           child: _buildAgendaList(),
         ),

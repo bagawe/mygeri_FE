@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'mygeri',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red, primary: Colors.red, secondary: Colors.white),
         primaryColor: Colors.red,

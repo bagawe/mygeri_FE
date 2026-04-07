@@ -103,7 +103,7 @@ class _PesanPageState extends State<PesanPage> {
         foregroundColor: Colors.white,
         elevation: 4,
         tooltip: 'Pesan Baru',
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.search),
       ),
     );
   }

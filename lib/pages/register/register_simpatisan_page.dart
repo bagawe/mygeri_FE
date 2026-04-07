@@ -21,6 +21,8 @@ class _RegisterSimpatisanPageState extends State<RegisterSimpatisanPage> {
   final TextEditingController _ulangiPasswordController = TextEditingController();
   
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   
   @override
   void dispose() {
@@ -189,10 +191,21 @@ class _RegisterSimpatisanPageState extends State<RegisterSimpatisanPage> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
                           hintText: 'Min 8 karakter: huruf besar, kecil, angka',
                           helperText: 'Contoh: Password123 (WAJIB: a-z, A-Z, 0-9)',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.grey[600],
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
                         validator: Validators.validatePassword,
                       ),
@@ -206,9 +219,20 @@ class _RegisterSimpatisanPageState extends State<RegisterSimpatisanPage> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _ulangiPasswordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
                           hintText: 'Ulangi password',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.grey[600],
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
                         ),
                         validator: (value) => Validators.validateConfirmPassword(value, _passwordController.text),
                       ),

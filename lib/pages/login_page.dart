@@ -379,6 +379,13 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       activeColor: Colors.grey[700],
                       checkColor: Colors.white,
+                      fillColor: MaterialStateProperty.resolveWith((states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Colors.grey[700];
+                        }
+                        return Colors.white; // Saat unchecked, putih
+                      }),
+                      side: BorderSide(color: Colors.grey[400]!),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                     ),
                     Flexible(

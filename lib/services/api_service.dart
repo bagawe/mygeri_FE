@@ -12,7 +12,7 @@ class ApiService {
   // static const String baseUrl = 'http://103.127.138.40:3030';
   
   // Android emulator - use 10.0.2.2 to access host machine localhost
-  static const String baseUrl = 'http://10.0.2.2:3030';
+  static const String baseUrl = 'http://103.127.96.136:3030';
   
   // Alternative URLs for different network configurations:
   // static const String baseUrl = 'http://localhost:3030'; // For macOS/Chrome/iOS Simulator

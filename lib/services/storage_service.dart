@@ -15,6 +15,7 @@ class StorageService {
   static const _userUuidKey = 'user_uuid';
   static const _userNameKey = 'user_name';
   static const _userEmailKey = 'user_email';
+  static const _userRoleKey = 'user_role'; // Role dari DB (selalu up-to-date)
   static const _savedAccountsKey = 'saved_accounts'; // JSON array of saved accounts
   static const _sessionExpiryKey = 'session_expiry'; // Session expiry timestamp
 
@@ -94,6 +95,27 @@ class StorageService {
       'name': await _storage.read(key: _userNameKey),
       'email': await _storage.read(key: _userEmailKey),
     };
+  }
+
+  // Save user role (SELALU dari API response, BUKAN dari JWT)
+  Future<void> saveUserRole(String role) async {
+    try {
+      await _storage.write(key: _userRoleKey, value: role);
+      print('✅ User role saved: $role');
+    } catch (e) {
+      print('❌ Failed to save user role: $e');
+    }
+  }
+
+  // Get user role dari storage
+  Future<String> getUserRole() async {
+    try {
+      final role = await _storage.read(key: _userRoleKey);
+      return role ?? 'simpatisan'; // Default ke simpatisan jika tidak ada
+    } catch (e) {
+      print('❌ Failed to get user role: $e');
+      return 'simpatisan';
+    }
   }
 
   // Save accounts - immediate memory cache + background secure storage

@@ -26,6 +26,8 @@ class _RegisterKaderLamaPageState extends State<RegisterKaderLamaPage> {
   File? _fotoKTA;
   File? _fotoSelfie;
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   
   @override
   void dispose() {
@@ -250,6 +252,7 @@ class _RegisterKaderLamaPageState extends State<RegisterKaderLamaPage> {
                 ),
                 const SizedBox(height: 24),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Column(
@@ -257,9 +260,15 @@ class _RegisterKaderLamaPageState extends State<RegisterKaderLamaPage> {
                         children: [
                           Row(
                             children: [
-                              const Text('Upload KTA :', style: TextStyle(fontWeight: FontWeight.w500)),
-                              const SizedBox(width: 8),
-                              Text('(Opsional)', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                              Flexible(
+                                child: Text(
+                                  'Upload KTA :',
+                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text('(Opsional)', style: TextStyle(color: Colors.grey[600], fontSize: 11)),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -274,9 +283,15 @@ class _RegisterKaderLamaPageState extends State<RegisterKaderLamaPage> {
                         children: [
                           Row(
                             children: [
-                              const Text('Foto Selfie :', style: TextStyle(fontWeight: FontWeight.w500)),
-                              const SizedBox(width: 8),
-                              Text('(Opsional)', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                              Flexible(
+                                child: Text(
+                                  'Foto Selfie :',
+                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text('(Opsional)', style: TextStyle(color: Colors.grey[600], fontSize: 11)),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -294,10 +309,21 @@ class _RegisterKaderLamaPageState extends State<RegisterKaderLamaPage> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
                         hintText: 'Min 8 karakter: huruf besar, kecil, angka',
                         helperText: 'Contoh: Password123 (WAJIB: a-z, A-Z, 0-9)',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey[600],
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                       ),
                       validator: Validators.validatePassword,
                     ),
@@ -311,9 +337,20 @@ class _RegisterKaderLamaPageState extends State<RegisterKaderLamaPage> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _ulangiPasswordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscureConfirmPassword,
+                      decoration: InputDecoration(
                         hintText: 'Ulangi password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey[600],
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                            });
+                          },
+                        ),
                       ),
                       validator: (value) => Validators.validateConfirmPassword(value, _passwordController.text),
                     ),

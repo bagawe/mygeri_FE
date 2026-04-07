@@ -134,6 +134,7 @@ class _FeedPageState extends State<FeedPage> {
         );
       }
     }
+    // NOTE: Backend otomatis membuat notifikasi saat like endpoint dipanggil
   }
 
   Future<void> _navigateToCreatePost() async {

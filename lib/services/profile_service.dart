@@ -8,6 +8,7 @@ import 'storage_service.dart';
 
 class ProfileService {
   final ApiService _apiService;
+  final StorageService _storage = StorageService();
 
   ProfileService(this._apiService);
 
@@ -16,11 +17,72 @@ class ProfileService {
     try {
       print('🔍 ProfileService: Getting profile...');
       final response = await _apiService.get('/api/users/profile', requiresAuth: true);
-      
+
       print('✅ ProfileService: Profile retrieved successfully');
       return UserProfile.fromJson(response['data']);
     } catch (e) {
       print('❌ ProfileService: Error getting profile - $e');
+      rethrow;
+    }
+  }
+
+  /// Refresh profile & update role di localStorage
+  /// Dipanggil secara periodik atau manual untuk mendeteksi perubahan role
+  /// Returns: {profile, roleChanged, newRole}
+  Future<Map<String, dynamic>> refreshUserProfile() async {
+    try {
+      print('🔄 ProfileService: Refreshing user profile...');
+      final response = await _apiService.get('/api/users/profile', requiresAuth: true);
+      final data = response['data'];
+
+      // Debug: log raw role data dari API
+      print('🔍 ProfileService: raw data[role] = ${data['role']}');
+      print('🔍 ProfileService: raw data[roles] = ${data['roles']}');
+
+      // Ambil role baru dari API response
+      // Backend bisa kirim 'role' (string) atau 'roles' (array of objects)
+      String newRole = 'simpatisan';
+      
+      if (data['role'] != null && data['role'] is String && (data['role'] as String).isNotEmpty) {
+        // Format 1: flat string "role": "kader"
+        newRole = data['role'] as String;
+      } else if (data['roles'] != null && data['roles'] is List && (data['roles'] as List).isNotEmpty) {
+        // Format 2: array "roles": [{"role": "kader", ...}]
+        final rolesList = data['roles'] as List;
+        // Ambil role tertinggi (prioritas: admin > kader > simpatisan)
+        for (final r in rolesList) {
+          final roleName = (r is Map) ? (r['role'] as String? ?? '') : r.toString();
+          if (roleName == 'admin') {
+            newRole = 'admin';
+            break;
+          } else if (roleName == 'kader') {
+            newRole = 'kader';
+          } else if (roleName == 'simpatisan' && newRole != 'kader') {
+            newRole = 'simpatisan';
+          }
+        }
+      }
+
+      final oldRole = await _storage.getUserRole();
+
+      // Update role di storage
+      await _storage.saveUserRole(newRole);
+
+      final roleChanged = oldRole != newRole;
+      if (roleChanged) {
+        print('🎉 Role berubah: $oldRole → $newRole');
+      } else {
+        print('✅ Role tidak berubah: $newRole');
+      }
+
+      return {
+        'profile': UserProfile.fromJson(data),
+        'roleChanged': roleChanged,
+        'oldRole': oldRole,
+        'newRole': newRole,
+      };
+    } catch (e) {
+      print('❌ ProfileService: Error refreshing profile - $e');
       rethrow;
     }
   }

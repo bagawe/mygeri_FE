@@ -686,6 +686,16 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           Checkbox(
                             value: _isChecked1,
                             onChanged: (val) => setState(() => _isChecked1 = val ?? false),
+                            activeColor: Colors.grey[700],
+                            checkColor: Colors.white,
+                            fillColor: MaterialStateProperty.resolveWith((states) {
+                              if (states.contains(MaterialState.selected)) {
+                                return Colors.grey[700];
+                              }
+                              return Colors.white;
+                            }),
+                            side: BorderSide(color: Colors.grey[400]!),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                           ),
                           const Expanded(
                             child: Text(
@@ -700,6 +710,16 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           Checkbox(
                             value: _isChecked2,
                             onChanged: (val) => setState(() => _isChecked2 = val ?? false),
+                            activeColor: Colors.grey[700],
+                            checkColor: Colors.white,
+                            fillColor: MaterialStateProperty.resolveWith((states) {
+                              if (states.contains(MaterialState.selected)) {
+                                return Colors.grey[700];
+                              }
+                              return Colors.white;
+                            }),
+                            side: BorderSide(color: Colors.grey[400]!),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                           ),
                           const Expanded(
                             child: Text(

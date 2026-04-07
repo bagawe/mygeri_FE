@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import '../../services/auth_service.dart';
 import '../../models/register_request.dart';
+import '../../utils/validators.dart';
 
 class RegisterKaderBaruPage extends StatefulWidget {
   const RegisterKaderBaruPage({super.key});
@@ -20,8 +23,6 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _nikController = TextEditingController();
-  final TextEditingController _genderController = TextEditingController();
-  final TextEditingController _statusController = TextEditingController();
   final TextEditingController _tempatLahirController = TextEditingController();
   final TextEditingController _tanggalLahirController = TextEditingController();
   final TextEditingController _provinsiController = TextEditingController();
@@ -36,11 +37,17 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _ulangiPasswordController = TextEditingController();
   
+  String? _selectedGender;
+  String? _selectedStatusKawin;
+  DateTime? _selectedDate;
+  
   File? _fotoKTP;
   File? _fotoSelfie;
   bool _isChecked1 = false;
   bool _isChecked2 = false;
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -48,8 +55,6 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
     _emailController.dispose();
     _usernameController.dispose();
     _nikController.dispose();
-    _genderController.dispose();
-    _statusController.dispose();
     _tempatLahirController.dispose();
     _tanggalLahirController.dispose();
     _provinsiController.dispose();
@@ -64,6 +69,34 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
     _passwordController.dispose();
     _ulangiPasswordController.dispose();
     super.dispose();
+  }
+  
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.red[700]!,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _tanggalLahirController.text = DateFormat('dd/MM/yyyy').format(picked);
+      });
+    }
   }
 
   Future<void> _pickImage(bool isKTP) async {
@@ -93,6 +126,27 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih jenis kelamin')),
+      );
+      return;
+    }
+
+    if (_selectedStatusKawin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih status perkawinan')),
+      );
+      return;
+    }
+
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap pilih tanggal lahir')),
+      );
       return;
     }
 
@@ -128,8 +182,8 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
         username: _usernameController.text.trim(),
         password: _passwordController.text,
         nik: _nikController.text.trim(),
-        jenisKelamin: _genderController.text.trim(),
-        statusKawin: _statusController.text.trim(),
+        jenisKelamin: _selectedGender!,
+        statusKawin: _selectedStatusKawin!,
         tempatLahir: _tempatLahirController.text.trim(),
         tanggalLahir: _tanggalLahirController.text.trim(),
         provinsi: _provinsiController.text.trim(),
@@ -222,87 +276,180 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
-                Row(
+                // Nama
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Nama :', style: TextStyle(fontWeight: FontWeight.w500)),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _namaController,
-                            decoration: const InputDecoration(
-                              hintText: 'Nama Lengkap',
-                            ),
-                          ),
-                        ],
+                    const Text('Nama :', style: TextStyle(fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _namaController,
+                      decoration: const InputDecoration(
+                        hintText: 'Nama Lengkap',
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Email :', style: TextStyle(fontWeight: FontWeight.w500)),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _emailController,
-                            decoration: const InputDecoration(
-                              hintText: 'user@email.com',
-                            ),
-                          ),
-                        ],
-                      ),
+                      validator: Validators.validateName,
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Row(
+                // Email
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text('Email :', style: TextStyle(fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        hintText: 'user@email.com',
+                      ),
+                      validator: Validators.validateEmail,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Username
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Username :', style: TextStyle(fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Username (min 3 karakter)',
+                        helperText: 'Hanya huruf, angka, underscore',
+                      ),
+                      validator: Validators.validateUsername,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // NIK - Full width
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('NIK :', style: TextStyle(fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _nikController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 16,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      decoration: const InputDecoration(
+                        hintText: 'NIK 16 digit (hanya angka)',
+                        counterText: '',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'NIK harus diisi';
+                        }
+                        if (value.length != 16) {
+                          return 'NIK harus 16 digit';
+                        }
+                        if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+                          return 'NIK hanya boleh angka';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Jenis Kelamin dan Status Perkawinan - Row dengan 2 field
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Jenis Kelamin
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('NIK :', style: TextStyle(fontWeight: FontWeight.w500)),
+                          const Text('Jenis Kelamin :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          TextField(
-                            controller: _nikController,
+                          DropdownButtonFormField<String>(
+                            value: _selectedGender,
+                            isExpanded: true,
                             decoration: const InputDecoration(
-                              hintText: 'NIK 16 digit',
+                              hintText: 'Pilih',
+                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                             ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Laki-laki',
+                                child: Text('Laki-laki', overflow: TextOverflow.ellipsis),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Perempuan',
+                                child: Text('Perempuan', overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedGender = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Pilih jenis kelamin';
+                              }
+                              return null;
+                            },
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 16),
+                    // Status Perkawinan
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('L/P :', style: TextStyle(fontWeight: FontWeight.w500)),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _genderController,
-                            decoration: const InputDecoration(
-                              hintText: 'Laki/Perempuan',
-                            ),
+                          const Text(
+                            'Status Kawin :',
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Kawin/Belum :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          TextField(
-                            controller: _statusController,
+                          DropdownButtonFormField<String>(
+                            value: _selectedStatusKawin,
+                            isExpanded: true,
                             decoration: const InputDecoration(
-                              hintText: 'Kawin/Belum',
+                              hintText: 'Pilih',
+                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                             ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Kawin',
+                                child: Text('Kawin', overflow: TextOverflow.ellipsis),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Belum Kawin',
+                                child: Text('Belum Kawin', overflow: TextOverflow.ellipsis),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Cerai Hidup',
+                                child: Text('Cerai Hidup', overflow: TextOverflow.ellipsis),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Cerai Mati',
+                                child: Text('Cerai Mati', overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedStatusKawin = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Pilih status';
+                              }
+                              return null;
+                            },
                           ),
                         ],
                       ),
@@ -318,11 +465,17 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                         children: [
                           const Text('Tempat Lahir :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          TextField(
+                          TextFormField(
                             controller: _tempatLahirController,
                             decoration: const InputDecoration(
                               hintText: 'Nama kota/kabupaten',
                             ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Tempat lahir harus diisi';
+                              }
+                              return null;
+                            },
                           ),
                         ],
                       ),
@@ -334,11 +487,20 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                         children: [
                           const Text('Tanggal Lahir :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          TextField(
+                          TextFormField(
                             controller: _tanggalLahirController,
-                            decoration: const InputDecoration(
-                              hintText: 'Date Picker dd/mm/yyyy',
+                            readOnly: true,
+                            decoration: InputDecoration(
+                              hintText: 'dd/MM/yyyy',
+                              suffixIcon: Icon(Icons.calendar_today, color: Colors.red[700]),
                             ),
+                            onTap: _selectDate,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Tanggal lahir harus diisi';
+                              }
+                              return null;
+                            },
                           ),
                         ],
                       ),
@@ -467,6 +629,7 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                 ),
                 const SizedBox(height: 24),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Column(
@@ -474,10 +637,24 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                         children: [
                           const Text('Buat Password :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          TextField(
+                          TextFormField(
                             controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(hintText: 'Delapan huruf'),
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              hintText: 'Min 8 karakter',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.grey[600],
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: Validators.validatePassword,
                           ),
                         ],
                       ),
@@ -489,15 +666,42 @@ class _RegisterKaderBaruPageState extends State<RegisterKaderBaruPage> {
                         children: [
                           const Text('Ulangi Password :', style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
-                          TextField(
+                          TextFormField(
                             controller: _ulangiPasswordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(hintText: 'Delapan huruf'),
+                            obscureText: _obscureConfirmPassword,
+                            decoration: InputDecoration(
+                              hintText: 'Ulangi password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.grey[600],
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (value) => Validators.validateConfirmPassword(value, _passwordController.text),
                           ),
                         ],
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                // Password hint below fields
+                Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Text(
+                    'Password harus min 8 karakter dengan kombinasi huruf besar, kecil, dan angka',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Row(

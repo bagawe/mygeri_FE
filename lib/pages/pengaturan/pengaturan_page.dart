@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/session_manager.dart';
+import '../notification/notification_page.dart';
 import 'ganti_password_page.dart';
 import 'blocked_users_page.dart';
 
@@ -100,30 +101,32 @@ class _PengaturanPageState extends State<PengaturanPage> {
             },
           ),
           const Divider(),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications, color: Colors.red),
+          ListTile(
+            leading: const Icon(Icons.notifications, color: Colors.red),
             title: const Text('Notifikasi'),
-            value: true,
-            onChanged: (val) {
-              _showComingSoonDialog('Notifikasi');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.language, color: Colors.red),
-            title: const Text('Bahasa'),
-            trailing: const Text('Indonesia'),
+            trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              _showComingSoonDialog('Bahasa');
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationPage()),
+              );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.brightness_6, color: Colors.red),
-            title: const Text('Tema'),
-            trailing: const Text('Terang'),
-            onTap: () {
-              _showComingSoonDialog('Tema');
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.language, color: Colors.red),
+          //   title: const Text('Bahasa'),
+          //   trailing: const Text('Indonesia'),
+          //   onTap: () {
+          //     _showComingSoonDialog('Bahasa');
+          //   },
+          // ),
+          // ListTile(
+          //   leading: const Icon(Icons.brightness_6, color: Colors.red),
+          //   title: const Text('Tema'),
+          //   trailing: const Text('Terang'),
+          //   onTap: () {
+          //     _showComingSoonDialog('Tema');
+          //   },
+          // ),
           ListTile(
             leading: const Icon(Icons.help_outline, color: Colors.red),
             title: const Text('Bantuan & FAQ'),
