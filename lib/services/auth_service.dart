@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'api_service.dart';
 import 'storage_service.dart';
 import 'history_service.dart';
@@ -52,18 +53,29 @@ class AuthService {
     }
   }
 
-  // Login user
+  // Login user with 10-second timeout
   Future<LoginResponse> login(String identifier, String password) async {
     try {
       print('=== LOGIN REQUEST ===');
       print('Identifier: "$identifier"');
       print('Password length: ${password.length}');
       
-      final response = await _api.post(
+      // Set 10-second timeout for login
+      final loginFuture = _api.post(
         '/api/auth/login',
         {
           'identifier': identifier,
           'password': password,
+        },
+      );
+
+      final response = await loginFuture.timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          print('⏱️ LOGIN TIMEOUT: Server tidak merespons dalam 10 detik');
+          throw ServerTimeoutException(
+            'Server tidak merespons dalam 10 detik. Periksa koneksi atau coba lagi.',
+          );
         },
       );
 
@@ -173,6 +185,20 @@ class AuthService {
     } catch (e) {
       print('=== LOGIN ERROR ===');
       print('Error: $e');
+      
+      // Re-throw timeout exception as-is
+      if (e is ServerTimeoutException) {
+        rethrow;
+      }
+      
+      // Check if it's a timeout error
+      if (e.toString().contains('TimeoutException') || 
+          e.toString().contains('timeout')) {
+        throw ServerTimeoutException(
+          'Server tidak merespons. Periksa koneksi internet Anda.',
+        );
+      }
+      
       throw Exception('Login failed: $e');
     }
   }
@@ -250,6 +276,29 @@ class AuthService {
   Future<Map<String, String?>> getCurrentUser() async {
     return await _storage.getUserData();
   }
+}
+
+/// Custom exception untuk server timeout/disconnect
+class ServerTimeoutException implements Exception {
+  final String message;
+  final String? errorCode;
+
+  ServerTimeoutException(this.message, {this.errorCode});
+
+  @override
+  String toString() => 'ServerTimeoutException: $message';
+}
+
+/// Custom exception untuk server errors
+class ServerErrorException implements Exception {
+  final String message;
+  final int? statusCode;
+  final String? errorCode;
+
+  ServerErrorException(this.message, {this.statusCode, this.errorCode});
+
+  @override
+  String toString() => 'ServerErrorException: $message (status: $statusCode)';
 }
 
 class LoginResponse {

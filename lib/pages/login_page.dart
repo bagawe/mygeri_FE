@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
+import '../widgets/server_disconnect_dialog.dart';
 import 'register/register_page.dart';
 import 'terms_page.dart';
 import 'home_page.dart';
@@ -151,12 +152,57 @@ class _LoginPageState extends State<LoginPage> {
         // Parse error message
         String errorMessage = 'Login gagal';
         
+        // Check for timeout/disconnect exception
+        if (e is ServerTimeoutException) {
+          // Show disconnect dialog
+          if (mounted) {
+            showServerDisconnectDialog(
+              context,
+              title: 'Server Tidak Terkoneksi',
+              message: e.message,
+              actionButtonText: 'Coba Lagi',
+              onActionPressed: () {
+                Navigator.pop(context);
+                // User bisa click tombol login lagi
+              },
+              secondaryButtonText: 'Keluar',
+              onSecondaryPressed: () {
+                Navigator.pop(context);
+              },
+              isDismissible: false,
+            );
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+        
         if (e.toString().contains('Invalid credentials')) {
           errorMessage = 'Email/Username atau password salah';
         } else if (e.toString().contains('Network error')) {
           errorMessage = 'Koneksi ke server gagal. Pastikan backend sudah berjalan.';
         } else if (e.toString().contains('401')) {
           errorMessage = 'Email/Username atau password salah';
+        } else if (e.toString().contains('timeout') || e.toString().contains('TimeoutException')) {
+          // Show disconnect dialog for timeout
+          if (mounted) {
+            showServerDisconnectDialog(
+              context,
+              title: 'Server Tidak Terkoneksi',
+              message: 'Server tidak merespons dalam 10 detik. Periksa koneksi internet Anda.',
+              actionButtonText: 'Coba Lagi',
+              onActionPressed: () {
+                Navigator.pop(context);
+              },
+              secondaryButtonText: 'Keluar',
+              isDismissible: false,
+            );
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          return;
         } else {
           errorMessage = 'Login gagal: ${e.toString()}';
         }
