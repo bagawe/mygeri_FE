@@ -72,9 +72,9 @@ class AuthService {
       final response = await loginFuture.timeout(
         const Duration(seconds: 15),
         onTimeout: () {
-          print('⏱️ LOGIN TIMEOUT: Server tidak merespons dalam 10 detik');
+          print('⏱️ LOGIN TIMEOUT: Server tidak merespons dalam 15 detik');
           throw ServerTimeoutException(
-            'Server tidak merespons dalam 10 detik. Periksa koneksi atau coba lagi.',
+            'Server tidak merespons dalam 15 detik. Periksa koneksi atau coba lagi.',
           );
         },
       );
