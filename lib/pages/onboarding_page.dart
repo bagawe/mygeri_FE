@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../models/onboarding_slide_model.dart';
 import '../services/onboarding_service.dart';
 import 'login_page.dart';
@@ -22,6 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   List<OnboardingSlideModel> _slides = [];
   bool _isLoading = true;
   String? _errorMessage;
+  Timer? _errorTimeoutTimer;
 
   @override
   void initState() {
@@ -33,14 +35,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _errorTimeoutTimer?.cancel();
     super.dispose();
   }
 
-  /// Fetch slides dari backend
+  /// Fetch slides dari backend dengan 5 detik timeout
   Future<void> _fetchSlides() async {
     try {
+      // Set timeout timer - jika error dalam 5 detik, auto redirect ke login
+      _errorTimeoutTimer = Timer(Duration(seconds: 5), () {
+        if (mounted && _isLoading) {
+          print('⏱️ Onboarding timeout setelah 5 detik');
+          setState(() {
+            _errorMessage = 'Loading took too long';
+            _isLoading = false;
+          });
+          Future.delayed(Duration(milliseconds: 500), _navigateToLogin);
+        }
+      });
+
       final service = OnboardingService();
       final slides = await service.getSlides();
+
+      // Cancel timer jika berhasil
+      _errorTimeoutTimer?.cancel();
 
       setState(() {
         _slides = slides;
@@ -48,17 +66,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
         // Jika no slides, langsung ke login
         if (slides.isEmpty) {
-          _navigateToLogin();
+          print('⚠️ No onboarding slides found');
+          Future.delayed(Duration(milliseconds: 500), _navigateToLogin);
         }
       });
     } catch (e) {
-      print('Error fetching slides: $e');
+      // Cancel timer jika ada exception
+      _errorTimeoutTimer?.cancel();
+
+      print('❌ Error fetching slides: $e');
       setState(() {
         _errorMessage = 'Error loading onboarding slides';
         _isLoading = false;
       });
 
-      // Jika error, go to login after 2 seconds
+      // Error handler: redirect ke login after 2 seconds
       Future.delayed(Duration(seconds: 2), _navigateToLogin);
     }
   }
@@ -124,10 +146,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Icon(Icons.error_outline, size: 48, color: Colors.red),
               SizedBox(height: 16),
               Text(_errorMessage!),
+              SizedBox(height: 8),
+              Text(
+                'Redirecting to login...',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
               SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _navigateToLogin,
-                child: Text('Go to Login'),
+                child: Text('Go to Login Now'),
               ),
             ],
           ),
