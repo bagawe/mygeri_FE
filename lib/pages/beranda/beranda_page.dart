@@ -4,6 +4,7 @@ import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
 import '../../services/storage_service.dart';
 import '../../services/api_service.dart';
+import '../../widgets/role_badge_widget.dart';
 import '../feed/feed_page.dart';
 import '../feed/create_post_page.dart';
 import '../hashtag/trending_hashtags_widget.dart';
@@ -33,6 +34,9 @@ class _BerandaPageState extends State<BerandaPage> {
 
   // Key untuk refresh feed
   int _feedRefreshKey = 0;
+
+  // Track if upgrade dialog already shown this session
+  bool _upgradeDialogShown = false;
 
   void _refreshFeed() {
     setState(() {
@@ -88,8 +92,11 @@ class _BerandaPageState extends State<BerandaPage> {
             _userProfile = result['profile'] as UserProfile;
           });
 
-          // Tampilkan dialog selamat jika naik dari simpatisan ke kader
-          if (result['oldRole'] == 'simpatisan' && newRole == 'kader') {
+          // Tampilkan dialog selamat hanya SEKALI jika naik dari simpatisan ke kader
+          if (result['oldRole'] == 'simpatisan' && 
+              newRole == 'kader' && 
+              !_upgradeDialogShown) {
+            _upgradeDialogShown = true;
             _showRoleUpgradeDialog();
           }
         }
@@ -170,8 +177,12 @@ class _BerandaPageState extends State<BerandaPage> {
         _isLoading = false;
       });
 
-      // Tampilkan dialog jika role baru saja naik ke kader
-      if (roleChanged && result['oldRole'] == 'simpatisan' && newRole == 'kader') {
+      // Tampilkan dialog jika role baru saja naik ke kader (dan belum ditampilkan)
+      if (roleChanged && 
+          result['oldRole'] == 'simpatisan' && 
+          newRole == 'kader' && 
+          !_upgradeDialogShown) {
+        _upgradeDialogShown = true;
         _showRoleUpgradeDialog();
       }
     } catch (e) {
@@ -329,7 +340,7 @@ class _BerandaPageState extends State<BerandaPage> {
               SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    // Header profil
+                    // Header profil dengan Role Badge
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       child: Row(
@@ -352,12 +363,22 @@ class _BerandaPageState extends State<BerandaPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _isLoading
-                                    ? Container(width: 80, height: 16, color: Colors.grey[300])
-                                    : Text(
-                                        _userProfile?.name ?? '-',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                      ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _isLoading
+                                          ? Container(width: 80, height: 16, color: Colors.grey[300])
+                                          : Text(
+                                              _userProfile?.name ?? '-',
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Role Badge di header
+                                    RoleBadge(role: _userRole, compact: false),
+                                  ],
+                                ),
                                 _isLoading
                                     ? Container(width: 60, height: 14, color: Colors.grey[200])
                                     : Text(
